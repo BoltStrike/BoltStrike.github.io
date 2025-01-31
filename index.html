@@ -1,9 +1,44 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
-    <title>This is the title of the webpage!</title>
+  	<title>Fast Robots - Aidan Derocher</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" href="css/style.css">
+
   </head>
   <body>
-    <p>This is an example paragraph. Anything in the <strong>body</strong> tag will appear on the page, just like this <strong>p</strong> tag and its contents.</p>
+	<div class="wrapper d-flex align-items-stretch">
+		<div id="sidebar-container"></div>
+
+		<div id="title" class="p-4 p-md-5 pt-5 centered">
+			<h1 class="mb-4">Aidan Derocher</h1>
+			<h2 class="mb-5">ECE 5160 Fast Robots Project Webpage</h2>
+			<img src="images/me.jpg" alt="Fast Robots Project" class="responsive-img">
+		</div>
+		<div id="content" class="p-4 p-md-5 pt-5 ">
+			<p>Hi, I'm Aidan Derocher!</p>
+		</div>
+	</div>
+
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/popper.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/main.js"></script>
+
+	<script>
+		fetch("pages/sidebar.html")
+			.then(response => response.text())
+			.then(data => {
+				document.getElementById("sidebar-container").innerHTML = data;
+				document.getElementById("sidebarCollapse").addEventListener("click", function () {
+					document.getElementById("sidebar").classList.toggle("active");
+				});
+			});
+	</script>
   </body>
 </html>
