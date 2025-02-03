@@ -109,10 +109,325 @@
             </div>
 
 
-            <h2><Strong>Part A</Strong></h2>
+            <h2><Strong>Part B</Strong></h2>
             <h4><Strong>Prelab:</Strong></h4>
+            <p>
+                The prelab for part B involved familiarizing myself with the BLE protocol and setting up a Python environment to run
+                jupyter lab in for interfacing with the Artemis board over BLE. I already had a version of python installed, but it was too outdated,
+                so I used VSCode to set up a python 3.13.1 environment. From there, I created a virtual environment 
+                specifically for Fast Robots and installed the specified packages, such as numpy or jupyter lab.
+            </p>
+            <div class = "centered">
+                <img src="/images/lab1/venv.png" alt="Virtual Environment setup" class="responsive-img">
+            </div>
+            <p>
+                I opened the code base and ran through the demo code, generating a new UUID. I then installed the ArduinoBLE library, updating the Baud rate and getting the MAC address.
+                My understanding of the codebase has it split into two main sections, being the Python side BLE and Arduino side BLE. These pair over bluetooth by the 
+                python side searching for the specified MAC address and establishing connection. From there, the python side can send commands to the Arduino via BLE services, provided these 
+                services are defined on both sides. These commands are sent via the string GATT characteristic. From there, the Arduino side can run a function and communicate 
+                back to the python side also using GATT characteristics. This communication can be recieved by directly reading the characteristic, or setting up a callback function 
+                for when the characteristic changes. These characteristics are defined by their UUID. Of course, there is a lot more complexity in regards to how the BLE protocol functions
+                on the backend, but this can be largely abstracted away to the python side sending commands, the BLE recieving these commands, operating, and returning a response.
+            </p>
 
+            <div class = "centered">
+                <img src="/images/lab1/MAC.png" alt="MAC Address" class="responsive-img">
+            </div>
 
+            <h4><Strong>Task 1 - Echo</Strong></h4>
+            <p>
+                The first task for this section of the lab was to send a string to the Arduino, and have the Arduino augment it and send it back.
+                The Echo command was already defined, so all that needed to be done to send an Echo command was <code>ble.send_command(CMD.ECHO, "Hello World")</code>
+                being run in Jupyter Lab. This would trigger the Echo case on the Arduino, and <code>success = robot_cmd.get_next_value(char_arr);</code> could be used 
+                to get the Hello World string. This is how all arguments passed from Python to Arduino will be recieved for this lab. I augmented the string by 
+                using strcat to concatenate "Robot says ->" to the front of the string and ":)" to the back. While this approach is pretty standard for C, I later realized
+                that the Enhanced strings could also be leveraged to do this, which occurs later in this lab. I then sent back the altered string with the following code:
+            </p>
+            <code>
+                <pre>
+                    tx_estring_value.clear();
+                    tx_estring_value.append(ret_arr);
+                    tx_characteristic_string.writeValue(tx_estring_value.c_str());
+        
+                    Serial.print("Sent back: ");
+                    Serial.println(tx_estring_value.c_str());
+                </pre>
+            </code>
+            <p>Pretty much anytime something is being sent from Arduino to Python, it is done like above, with some small differences 
+                depending on the task. The string GATT characteristic is then read from the python side to get the augmented string.
+            </p>
+            <div class = "centered">
+                <img src="/images/lab1/MAC.png" alt="MAC Address" class="responsive-img">
+            </div>
+
+            <h4><Strong>Task 1 - Echo</Strong></h4>
+            <p>
+                The first task for this section of the lab was to send a string to the Arduino, and have the Arduino augment it and send it back.
+                The Echo command was already defined, so all that needed to be done to send an Echo command was <code>ble.send_command(CMD.ECHO, "Hello World")</code>
+                being run in Jupyter Lab. This would trigger the Echo case on the Arduino, and <code>success = robot_cmd.get_next_value(char_arr);</code> could be used 
+                to get the Hello World string. This is how all arguments passed from Python to Arduino will be recieved for this lab. I augmented the string by 
+                using strcat to concatenate "Robot says ->" to the front of the string and ":)" to the back. While this approach is pretty standard for C, I later realized
+                that the Enhanced strings could also be leveraged to do this, which occurs later in this lab. I then sent back the altered string with the following code:
+            </p>
+            <code>
+                <pre>
+                    tx_estring_value.clear();
+                    tx_estring_value.append(ret_arr);
+                    tx_characteristic_string.writeValue(tx_estring_value.c_str());
+        
+                    Serial.print("Sent back: ");
+                    Serial.println(tx_estring_value.c_str());
+                </pre>
+            </code>
+            <p>Pretty much anytime something is being sent from Arduino to Python, it is done like above, with some small differences 
+                depending on the task. The string GATT characteristic is then read from the python side to get the augmented string.
+            </p>
+            
+            <div class = "centered">
+                <img src="/images/lab1/echo.png" alt="Echo being run from Python" class="responsive-img">
+            </div>
+
+            <h4><Strong>Task 2 - Send Three Floats</Strong></h4>
+            <p>
+                This task consisted of sending 3 floats from Python to Arduino, and printing them on the Arduino serial.
+                The command ends up being very similar to the demo command sent_two_ints, with the command being sent with <code>ble.send_command</code>
+                and 3 floats passed as a string argument, delimited by spaces. All the Arduino has to do is create 3 floats and populate them with
+                <code>robot_cmd.get_next_value</code>. From there, the 3 floats could be printed to the serial monitor.
+            </p>
+
+            <div class = "centered">
+                <img src="/images/lab1/floats.png" alt="3 Floats printed in serial monitor" class="responsive-img">
+            </div>
+
+            <h4><Strong>Task 3 - Get Time Millis</Strong></h4>
+            <p>
+                This task prompts the Arduino to return it's uptime in milliseconds via the String characteristic. This time, I had to 
+                make a new command. This was done by adding a new case to the .ino code, and adding GET_TIME_MILLIS to the Arduino command type 
+                enumeration and the python cmd_types.py. From there, the command was called via python similarly to the prior two. The uptime of the 
+                Arduino can be found with the <code>millis()</code> function, so I return the time with
+            </p>
+            <code>
+                <pre>
+                    tx_estring_value.clear();
+                    tx_estring_value.append("T:");
+                    tx_estring_value.append(int(millis()));
+                    tx_characteristic_string.writeValue(tx_estring_value.c_str());
+                </pre>
+            </code>
+            <p>
+                Notably, the time was meant to be sent back as a string, with T: prepended. This time I do this using the properties 
+                of estrings, specifically the .append function which appends a float, double, int, character array, or string literal 
+                to the estring. I also had to cast the time to an int to be appended with this function.
+            </p>
+
+            <div class = "centered">
+                <img src="/images/lab1/millis.png" alt="Get_time_Millis return" class="responsive-img">
+            </div>
+
+            <h4><Strong>Task 4 - Notification Handling</Strong></h4>
+            <p>
+                This task leverages the notification handling capabilities of the python library instead of using <code>ble.recieve_string</code>
+                as was done in the earlier tasks. This is accomplished with the line <code>ble.start_notify(ble.uuid['RX_STRING'], time_notification_handler)</code>,
+                which calls the time_notification_handler callback function in python every time a new string characteristic is recieved. When using a notification 
+                handler, the characteristic is given to the callback function as a byte array. To extract the time, this byte array is converted to a string using 
+                the built in python ble library function, and then <code>split()</code> can be used to isolate the time.
+                With this, whenever GET_TIME_MILLIS is called, the returning string characteristic is automatically recieved and parsed for time.
+            </p>
+
+            <div class = "centered">
+                <img src="/images/lab1/noti.png" alt="Notification handler for time" class="responsive-img">
+            </div>
+
+            <h4><Strong>Task 5 - Looping Time</Strong></h4>
+            <p>
+                The next step was to expand on the timing by having the Arduino loop sending its time in milliseconds,
+                so the speed of transfering this information could be observed. I chose to do this by implementing a new command,
+                START_TIME_LOOP, which calls a function that contiguously sends the result of the millis() command for the next 5 seconds, 
+                using the same method as task 3 to accomplish this. All of these values are then picked up by the notification handler, seen below.
+            </p>
+            <div class = "centered"></div>
+                <img src="/images/lab1/looptime.png" alt="Looping time command" class="responsive-img">
+            </div>
+            <p>
+                From this experiment, it can be seen that the time between sending these millis() commands
+                has a good amount of variance, with it sometimes only being one milliseconds between, but sometimes 
+                taking upwards of 30 milliseconds. The average time between these is about 14 milliseconds. Since each
+                string being sent is 8 characters (T:123456), this means 8 bytes are being sent. Thus, the effective data 
+                transfer rate of this method is 8 bytes/14 ms, or 0.57 bytes/millisecond.
+            </p>
+
+            <h4><Strong>Task 6 - Time Array</Strong></h4>
+            <p>This task is a variation of task 5, with all of the timestamps being stored in an array and then sent out. This 
+                means all of the timestamps are collected before any are communicated. I accomplished this by altering my looping code to
+                put the timestamp value in an array of size 128 instead of just sending it, breaking from the loop as soon as the array is filled.
+                I then added the new command SEND_TIME_DATA to loop through this array and send each of the timestamps back. I also 
+                altered my notification handler to store the returning data in a list so I could verify every sample got sent back, seen below.
+            </p>
+            <div class = "centered">
+                <img src="/images/lab1/arraytime.png" alt="Array of time command" class="responsive-img">
+            </div>
+            <p>
+                All of the data was in fact sent over, but what was more interesting was that many of the timestamps were identical, only incrementing
+                1 ms at a time at most. This shows that in the last task that the bluetooth communications were significatly slowing the rate at which 
+                timestamps could be collected. This reveals a tradeoff between collecting data in live time versus collecting data as quickly as possible.
+            </p>
+
+            <h4><Strong>Task 7 - Temperature Array</Strong></h4>
+            <p>
+                The time array is once again extended upon in this task by temperatures also being recorded with their respective timestamps.
+                I accomplished this by using the <code>analogTempRead()</code> function that was used in the analog example to my loop, making the loop as follows:
+            </p>
+            <code>
+                <pre>
+                    unsigned long startMillis = millis();
+                    //Five seconds, can increase
+                    int i = 0;
+                    while(millis() - startMillis < 5000) {
+                
+                      //Array Implementation (Part 6)
+                      time_arr[i] = int(millis());
+                
+                      //Temp Implementation (Part 7)
+                
+                      temp_arr[i] = analogReadTemp();    // raw ADC counts from die temperature sensor
+                      //float temp_f = getTempDegF();  //can swap to float array and use this for farenheit
+                
+                      i ++;
+                      if (i == LEN){ 
+                        break;
+                      }
+                </pre>
+            </code>
+            <p>
+                From there, I added a command GET_TEMP_READINGS. This functions similarly to send time data, but also appends "Temp:123".
+                The notification handler was altered to make two lists and parse the times and temperatures from eachother, allowing for 
+                Python to have access to each time stamp and temperature seperately.
+            </p>
+            <div class = "centered">
+                <img src="/images/lab1/arraytemp.png" alt="Array of temperature command" class="responsive-img">
+            </div>
+
+            <h4><Strong>Task 8 - Discussion of data collection</Strong></h4>
+            <p>
+                This task asks for the comparison of collecting data in arrays and then sending it versus continually sending the data.
+                As mentioned before, collecting data in an array removes any bluetooth communications during the collection, making it so 
+                data can be recorded much faster, with the only limiter on speed being how long it takes to gather and store the data, which is magnitudes faster
+                than a bluetooth command in this case. Conversly, constantly sending the data means that the data recieved is much closer to live time.
+                Thus, when selecting which method to use, it is important to consider what is the priority of the application. If having accurate and contiguous
+                data is a priority, then storing in an array is better. An example of this would be recording performance analystics of a device. However, if the priority is to
+                use that data immediately in live time, then it is far better to contiguously send it. An example of this could be streaming data to a live time graph.
+                Notably, using the array method introduces another constraing, being how much data can actually be stored. The Artemis board has 384 KB of RAM, which 
+                is where these values would be stored. This means at most 384 Kilobytes of data could be stored at once. Since the time stamps and temperatures were being 
+                stored as ints, which are 2 bytes, we could store 192,000 time stamps or temperatures before running out of memory. However, in reality
+                this amount will be less as other things will occupy RAM, such as other runtime variables. 
+            </p>
+            <p>
+                One potential solution to this tradeoff is to do a combination of the two methods. That is that data is stored in relatively small arrays,
+                and then these arrays are sent all at once. This helps keep closer to livetime while avoiding the latency of bluetooth in between data points.
+                In a past project, I actually made an oscilloscope that streamed data to a smartphone over BLE, and this was my solution to have accurate wave
+                forms in livetime. This method has the consequence of data being missed when the arrays are transmitted over, but is useful as it can get 
+                more contiguous data and not run into memory constraints.
+            </p>
+
+            <h4><Strong>5000 Task - Effective Data Rate And Overhead</Strong></h4>
+            <p>
+                This task requires sending data packets of different sizes and seeing how much the times of sending them end up changing.
+                To acheive this, I implemented a command called INIT_VAR, which would recieve how many bytes of data that are intended to be sent
+                and then generate a message of that size. I accomplished this by creating a char array of that length and populating it, done in the following code:
+            </p>
+            <code>
+                <pre>
+                    int len;
+
+                    // Extract the next value from the command string as an integer
+                    success = robot_cmd.get_next_value(len);
+                    if (success) {
+                      if (byte_str){
+                        free(byte_str);
+                      }
+                      byte_str = (char *)malloc(len);
+
+                      //Init variable string length
+                      for (int i = 0; i < len; i++){
+                        byte_str[i] = 'a';
+                      }
+                    }
+                    break;
+                </pre>
+            </code>
+            <p>
+                This allowed me to keep reusing the char array variable at different sizes. I chose to do this separate from the 
+                bluetooth transmission so the overhead of creating this array didn't impact the results. In order to time each transmission,
+                I used <code>time.time()</code> in python to record a starting time stamp. I then used a command I made called VAR_BYTE_RESPONSE to
+                prompt the arduino to return the prepared string. I had a notification handler that would recieve this response and take a second 
+                timestamp, allowing me to record total transmission time. Below is an example for 5 bytes:
+            </p> 
+            <div class = "centered">
+                <img src="/images/lab1/varbyte.png" alt="Variable bytes code" class="responsive-img">
+            </div>
+            <p>
+                This method isn't perfect, as it records the bluetooth overhead of sending the initial command rather than just the overhead of
+                recieving a variable amount of bytes. Ideally, the timing could be done on the arduino, with it recording when the send was started,
+                and then python recording when it recieved the data, but this required some synchronization between the python and arduino timing methods,
+                which seemed excessive. I used matplotlib to plot the results of each of these transfers.
+            </p>
+            <div class = "centered">
+                <img src="/images/lab1/roundtrip.png" alt="Variable bytes graph" class="responsive-img">
+            </div>
+            <p>
+                This graph displays the roundtrip times of sending the initial bluetooth request and then waiting for the response for different
+                data sizes. As one would expect, the 5 byte transfer was the fastest, with each increasing size roughly taking slightly longer.
+                There is some inconsistency, especially noticeable with the 100 bytes transfer. I suspect this is just due to some variability with
+                the bluetooth overhead, perhaps based on connection strenght, as each run gave different results. To me, it seems like each data size 
+                has a similar amount of bluetooth overhead, with all of taking similar amounts of time (0.075-0.085 excluding 100 bytes) .However, it is clear that the extra time
+                caused by increasing the amount of bytes sent is far less than the time that the bluetooth overhead, which can be seen in the changes between
+                each byte size time being relatively small compared to the overall time. This implies that when sending a lot of data, it is more efficient to send a larger
+                number of bytes at once, as this reduces the total number of times that the bluetooth overhead occurs.
+            </p>
+
+            <h4><Strong>5000 Task - Reliability</Strong></h4>
+            <p>
+                To test the reliability of bluetooth transmissions, we were tasked with implementing the system to send data as fast as possible
+                and check if any data ended up not being transmitted. My approach to this was to have a loop that contiguously sent 1 int, with
+                the int incrementing each time, seen below:
+            </p>
+            <code>
+                <pre>
+                    case INT_LOOP:
+                    {
+                      int i;
+                      while(i<10000){
+                         tx_characteristic_float.writeValue(i);
+                         i++;
+                      }
+                      Serial.print("Done");
+                      break;
+                    }
+                </pre>
+            </code>
+            <p>
+                I called this loop under a new command, INT_LOOP. It technically is possible to send 
+                data fast as there is added overhead in both incrementing the int as well as the while loop 
+                checking the size of the int. However, this approach had the advantage of being able to check if 
+                any data was lost by checking if the recieved messages did in fact increment by one each time.
+                I wrote a function on the python side to do this check for me. Additionally, I had a notification
+                handler on the python side to recieve these messages as quick as possible.
+            </p>
+            <div class = "centered">
+                <img src="/images/lab1/reliability.png" alt="reliabity test" class="responsive-img">
+            </div>
+            <p>
+                What I discovered was that none of the data ended up being dropped, which was not what I expected. However, I found that by 
+                adding a printout to the Arduino side, that the number that the Arduino reported sending was getting progressively further ahead
+                than the one recieved by Python. My hypothesis is that when the Arduino sends something over BLE, it is put in some sort of FIFO 
+                queue, which is then extracted from by the notification handler. This results in none of the data being dropped, but the recieved data 
+                falling behind the sent data, with the data being done sending well before it was done being recieved. I additionally tested with 
+                using the recieve_float function to get this data, but interestingly this function would only get the most recently sent characteristic.
+                This implies a functional difference in behavior between the notification handler and the recieve methods, as the notification handler will 
+                read through all of the sent data but a recieve call will always return the most recently sent data. Thus, it is possible to miss data with 
+                recieve but not with the notification handler. It is also possible that a queue is in the notification handler itself rather than on the BLE,
+                but either way it appears that with the notification handler the transmissions are being recorded somewhere as to prevent losing data.
+            </p>
     </div>
 
 

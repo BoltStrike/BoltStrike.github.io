@@ -142,3 +142,31 @@
 2025-01-28 16:20:53,965 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
 2025-01-28 16:20:57,187 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
 2025-01-28 16:28:53,726 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-02-03 18:06:24,471 | MainThread   | [DEBUG   ] | __init__            |: Python Info: sys.version_info(major=3, minor=13, micro=1, releaselevel='final', serial=0)
+2025-02-03 18:06:24,471 | MainThread   | [DEBUG   ] | __init__            |: System Info: macOS-14.1-arm64-arm-64bit-Mach-O
+2025-02-03 18:06:24,472 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-02-03 18:08:51,403 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-02-03 18:08:54,473 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-02-03 18:10:15,036 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-02-03 18:10:52,812 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-02-03 18:10:55,941 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-02-03 18:15:12,564 | MainThread   | [INFO    ] | _connect            |: Already connected to a BLE device
+2025-02-03 18:15:14,886 | MainThread   | [INFO    ] | _connect            |: Already connected to a BLE device
+2025-02-03 18:15:17,911 | MainThread   | [INFO    ] | exit_handler        |: Exiting...
+2025-02-03 18:15:17,914 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-02-03 18:15:17,914 | MainThread   | [INFO    ] | exit_handler        |: Gracefully Exiting
+2025-02-03 18:15:21,299 | MainThread   | [DEBUG   ] | __init__            |: Python Info: sys.version_info(major=3, minor=13, micro=1, releaselevel='final', serial=0)
+2025-02-03 18:15:21,299 | MainThread   | [DEBUG   ] | __init__            |: System Info: macOS-14.1-arm64-arm-64bit-Mach-O
+2025-02-03 18:15:21,300 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-02-03 18:15:24,324 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-02-03 18:15:25,339 | MainThread   | [INFO    ] | exit_handler        |: Exiting...
+2025-02-03 18:15:25,341 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-02-03 18:15:25,342 | MainThread   | [INFO    ] | exit_handler        |: Gracefully Exiting
+2025-02-03 18:15:25,426 | MainThread   | [WARNING ] | __del__             |: Could not delete BaseBLEController instance before exiting
+2025-02-03 18:15:33,862 | MainThread   | [DEBUG   ] | __init__            |: Python Info: sys.version_info(major=3, minor=13, micro=1, releaselevel='final', serial=0)
+2025-02-03 18:15:33,862 | MainThread   | [DEBUG   ] | __init__            |: System Info: macOS-14.1-arm64-arm-64bit-Mach-O
+2025-02-03 18:15:33,862 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-02-03 18:15:36,868 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-02-03 18:16:21,806 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-02-03 18:17:00,027 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-02-03 18:17:02,963 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64

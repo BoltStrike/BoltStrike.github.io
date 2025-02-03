@@ -367,7 +367,7 @@ write_data()
     if (currentMillis - previousMillis > interval) {
 
         tx_float_value = tx_float_value + 0.5;
-        tx_characteristic_float.writeValue(tx_float_value);
+        //tx_characteristic_float.writeValue(tx_float_value);
 
         if (tx_float_value > 10000) {
             tx_float_value = 0;
