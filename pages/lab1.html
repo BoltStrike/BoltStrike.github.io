@@ -125,7 +125,7 @@
                 My understanding of the codebase has it split into two main sections, being the Python side BLE and Arduino side BLE. These pair over bluetooth by the 
                 python side searching for the specified MAC address and establishing connection. From there, the python side can send commands to the Arduino via BLE services, provided these 
                 services are defined on both sides. These commands are sent via the string GATT characteristic. From there, the Arduino side can run a function and communicate 
-                back to the python side also using GATT characteristics. This communication can be recieved by directly reading the characteristic, or setting up a callback function 
+                back to the python side also using GATT characteristics. This communication can be received by directly reading the characteristic, or setting up a callback function 
                 for when the characteristic changes. These characteristics are defined by their UUID. Of course, there is a lot more complexity in regards to how the BLE protocol functions
                 on the backend, but this can be largely abstracted away to the python side sending commands, the BLE recieving these commands, operating, and returning a response.
             </p>
@@ -139,7 +139,7 @@
                 The first task for this section of the lab was to send a string to the Arduino, and have the Arduino augment it and send it back.
                 The Echo command was already defined, so all that needed to be done to send an Echo command was <code>ble.send_command(CMD.ECHO, "Hello World")</code>
                 being run in Jupyter Lab. This would trigger the Echo case on the Arduino, and <code>success = robot_cmd.get_next_value(char_arr);</code> could be used 
-                to get the Hello World string. This is how all arguments passed from Python to Arduino will be recieved for this lab. I augmented the string by 
+                to get the Hello World string. This is how all arguments passed from Python to Arduino will be received for this lab. I augmented the string by 
                 using strcat to concatenate "Robot says ->" to the front of the string and ":)" to the back. While this approach is pretty standard for C, I later realized
                 that the Enhanced strings could also be leveraged to do this, which occurs later in this lab. I then sent back the altered string with the following code:
             </p>
@@ -165,7 +165,7 @@
                 The first task for this section of the lab was to send a string to the Arduino, and have the Arduino augment it and send it back.
                 The Echo command was already defined, so all that needed to be done to send an Echo command was <code>ble.send_command(CMD.ECHO, "Hello World")</code>
                 being run in Jupyter Lab. This would trigger the Echo case on the Arduino, and <code>success = robot_cmd.get_next_value(char_arr);</code> could be used 
-                to get the Hello World string. This is how all arguments passed from Python to Arduino will be recieved for this lab. I augmented the string by 
+                to get the Hello World string. This is how all arguments passed from Python to Arduino will be received for this lab. I augmented the string by 
                 using strcat to concatenate "Robot says ->" to the front of the string and ":)" to the back. While this approach is pretty standard for C, I later realized
                 that the Enhanced strings could also be leveraged to do this, which occurs later in this lab. I then sent back the altered string with the following code:
             </p>
@@ -226,12 +226,12 @@
 
             <h4><Strong>Task 4 - Notification Handling</Strong></h4>
             <p>
-                This task leverages the notification handling capabilities of the python library instead of using <code>ble.recieve_string</code>
+                This task leverages the notification handling capabilities of the python library instead of using <code>ble.receive_string</code>
                 as was done in the earlier tasks. This is accomplished with the line <code>ble.start_notify(ble.uuid['RX_STRING'], time_notification_handler)</code>,
-                which calls the time_notification_handler callback function in python every time a new string characteristic is recieved. When using a notification 
+                which calls the time_notification_handler callback function in python every time a new string characteristic is received. When using a notification 
                 handler, the characteristic is given to the callback function as a byte array. To extract the time, this byte array is converted to a string using 
                 the built in python ble library function, and then <code>split()</code> can be used to isolate the time.
-                With this, whenever GET_TIME_MILLIS is called, the returning string characteristic is automatically recieved and parsed for time.
+                With this, whenever GET_TIME_MILLIS is called, the returning string characteristic is automatically received and parsed for time.
             </p>
 
             <div class = "centered">
@@ -245,7 +245,7 @@
                 START_TIME_LOOP, which calls a function that contiguously sends the result of the millis() command for the next 5 seconds, 
                 using the same method as task 3 to accomplish this. All of these values are then picked up by the notification handler, seen below.
             </p>
-            <div class = "centered"></div>
+            <div class = "centered">
                 <img src="/images/lab1/looptime.png" alt="Looping time command" class="responsive-img">
             </div>
             <p>
@@ -312,7 +312,7 @@
                 This task asks for the comparison of collecting data in arrays and then sending it versus continually sending the data.
                 As mentioned before, collecting data in an array removes any bluetooth communications during the collection, making it so 
                 data can be recorded much faster, with the only limiter on speed being how long it takes to gather and store the data, which is magnitudes faster
-                than a bluetooth command in this case. Conversly, constantly sending the data means that the data recieved is much closer to live time.
+                than a bluetooth command in this case. Conversly, constantly sending the data means that the data received is much closer to live time.
                 Thus, when selecting which method to use, it is important to consider what is the priority of the application. If having accurate and contiguous
                 data is a priority, then storing in an array is better. An example of this would be recording performance analystics of a device. However, if the priority is to
                 use that data immediately in live time, then it is far better to contiguously send it. An example of this could be streaming data to a live time graph.
@@ -332,7 +332,7 @@
             <h4><Strong>5000 Task - Effective Data Rate And Overhead</Strong></h4>
             <p>
                 This task requires sending data packets of different sizes and seeing how much the times of sending them end up changing.
-                To acheive this, I implemented a command called INIT_VAR, which would recieve how many bytes of data that are intended to be sent
+                To acheive this, I implemented a command called INIT_VAR, which would receive how many bytes of data that are intended to be sent
                 and then generate a message of that size. I accomplished this by creating a char array of that length and populating it, done in the following code:
             </p>
             <code>
@@ -359,7 +359,7 @@
                 This allowed me to keep reusing the char array variable at different sizes. I chose to do this separate from the 
                 bluetooth transmission so the overhead of creating this array didn't impact the results. In order to time each transmission,
                 I used <code>time.time()</code> in python to record a starting time stamp. I then used a command I made called VAR_BYTE_RESPONSE to
-                prompt the arduino to return the prepared string. I had a notification handler that would recieve this response and take a second 
+                prompt the arduino to return the prepared string. I had a notification handler that would receive this response and take a second 
                 timestamp, allowing me to record total transmission time. Below is an example for 5 bytes:
             </p> 
             <div class = "centered">
@@ -368,7 +368,7 @@
             <p>
                 This method isn't perfect, as it records the bluetooth overhead of sending the initial command rather than just the overhead of
                 recieving a variable amount of bytes. Ideally, the timing could be done on the arduino, with it recording when the send was started,
-                and then python recording when it recieved the data, but this required some synchronization between the python and arduino timing methods,
+                and then python recording when it received the data, but this required some synchronization between the python and arduino timing methods,
                 which seemed excessive. I used matplotlib to plot the results of each of these transfers.
             </p>
             <div class = "centered">
@@ -409,23 +409,23 @@
                 I called this loop under a new command, INT_LOOP. It technically is possible to send 
                 data fast as there is added overhead in both incrementing the int as well as the while loop 
                 checking the size of the int. However, this approach had the advantage of being able to check if 
-                any data was lost by checking if the recieved messages did in fact increment by one each time.
+                any data was lost by checking if the received messages did in fact increment by one each time.
                 I wrote a function on the python side to do this check for me. Additionally, I had a notification
-                handler on the python side to recieve these messages as quick as possible.
+                handler on the python side to receive these messages as quick as possible.
             </p>
             <div class = "centered">
-                <img src="/images/lab1/reliability.png" alt="reliabity test" class="responsive-img">
+                <img src="/images/lab1/reliability.png" alt="reliability test" class="responsive-img">
             </div>
             <p>
                 What I discovered was that none of the data ended up being dropped, which was not what I expected. However, I found that by 
                 adding a printout to the Arduino side, that the number that the Arduino reported sending was getting progressively further ahead
-                than the one recieved by Python. My hypothesis is that when the Arduino sends something over BLE, it is put in some sort of FIFO 
-                queue, which is then extracted from by the notification handler. This results in none of the data being dropped, but the recieved data 
-                falling behind the sent data, with the data being done sending well before it was done being recieved. I additionally tested with 
-                using the recieve_float function to get this data, but interestingly this function would only get the most recently sent characteristic.
-                This implies a functional difference in behavior between the notification handler and the recieve methods, as the notification handler will 
-                read through all of the sent data but a recieve call will always return the most recently sent data. Thus, it is possible to miss data with 
-                recieve but not with the notification handler. It is also possible that a queue is in the notification handler itself rather than on the BLE,
+                than the one received by Python. My hypothesis is that when the Arduino sends something over BLE, it is put in some sort of FIFO 
+                queue, which is then extracted from by the notification handler. This results in none of the data being dropped, but the received data 
+                falling behind the sent data, with the data being done sending well before it was done being received. I additionally tested with 
+                using the receive_float function to get this data, but interestingly this function would only get the most recently sent characteristic.
+                This implies a functional difference in behavior between the notification handler and the receive methods, as the notification handler will 
+                read through all of the sent data but a receive call will always return the most recently sent data. Thus, it is possible to miss data with 
+                receive but not with the notification handler. It is also possible that a queue is in the notification handler itself rather than on the BLE,
                 but either way it appears that with the notification handler the transmissions are being recorded somewhere as to prevent losing data.
             </p>
     </div>
