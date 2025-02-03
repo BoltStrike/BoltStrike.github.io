@@ -8,9 +8,105 @@
     <div id="sidebar-container"></div>
     <div class="stacked">
         <div id="content" class="p-4 p-md-5 pt-5">
-            <h2 class="mb-4">**Lab 1 - Artemis and Bluetooth**</h2>
-            <p>Lab 1 primari</p>
-        </div>
+            <h1 class="mb-4"><strong>Lab 1 - Artemis and Bluetooth</strong></h1>
+            <p>Lab 1 was split into two sections, Lab 1A and Lab 1B. Lab 1A consisted of tasks to familiarize ourselves with 
+                the Arduino IDE and Artemis board that will be used for this class, while Lab 1B involved communicating to the artemis board via Bluetooth.
+            </p>
+            <h2><Strong>Part A</Strong></h2>
+            <h4><Strong>Prelab:</Strong></h4>
+                <p>
+                    For the prelab of Lab 1A, I set up the Arduino IDE on my personal macbook to allow me to work with the Artemis board both within and outside of lab sections. I installed the 
+                    Arduino IDE 2.3.4, the latest version of the Arduino IDE. Additionally, I used the board manager to also install the Sparkfun Apollo3 Arduino Core, which allows the 
+                    Arduino IDE to recognize our Artemis board and includes some examples for interfacing with it.
+                </p>
+            <h4><Strong>Task 1 - Connecting Artemis Board:</Strong></h4>
+            <p>
+                The first part of Lab 1A was to get the Artemis Board connected to my computer and recognized in the Arduino IDE. I didn't encounter any issues with 
+                this step, with the Artemis board showing immediately when I plugged it into my laptop.
+            </p>
+            <div class = "centered">
+                <img src="/images/lab1/artrecognized.png" alt="Artemis board recognized" class="responsive-img">
+            </div>
+            <h4><Strong>Task 2 - Blink:</Strong></h4>
+            <p>
+                With the board connected, the next step was to run the example program Blink. This was accomplished by 
+                simply loading the example program from the list of examples included with the Apollo3 core, and then flashing it
+                to the board.
+            </p>
+            <div class = "centered">
+                <video width="320" height="240" controls>
+                    <source src="/images/lab1/blink.qt" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+
+            <h4><Strong>Task 3 - Serial:</Strong></h4>
+            <p>This task once again consisted of running one of the example programs for the Artemis board, this time being the serial 
+                test example. This example would listen for characters to be typed and then echo them back to the serial monitor, which can 
+                be opened in the Arduino IDE. This program validated that the serial output of the Artemis board was behaving as intended.
+            </p>
+            <div class = "centered">
+                <img src="/images/lab1/serial.png" alt="Serial monitor" class="responsive-img">
+            </div>
+            <h4><Strong>Task 4 - Analog Read:</Strong></h4>
+            <p>
+                The next task involved testing the temperature sensor on the Artemis board. This was done with the Analog Read example, which 
+                uses an onboard ADC to get the analog voltage from the temperature sensor, which is then printed out in terms of counts via serial.
+                This example also altered the LED brightness based on the read temperature. To test this sensor, I used my body heat to heat up the sensor 
+                and blew on it to cool it down. Since the sensor is integrated with the chip and is therefore under a sheild, I found it easier to get the 
+                sensor readings to change by applying heat to the back of the board rather than to the sheild directly.
+            </p>
+            <div class = "centered">
+                <img src="/images/lab1/analog.png" alt="Temperature sensor readings" class="responsive-img">
+            </div>
+
+            <h4><Strong>Task 5 - Microphone:</Strong></h4>
+            <p>
+                The final example for this portion of the lab was the MicrophoneOutput Example from the PDM section. This example would
+                take the pulse density modulated signals produced from the microphone, and use a Fast Fourier Transform to get the highest
+                frequency the microphone was recording in Hertz. This frequency was then printed out to the serial monitor. I tested this by 
+                confirming that the Hertz reading would vary based off the pitch of my voice, as well playing a set Hertz value and
+                verifying the microphone returned the correct value.
+            </p>
+            <div class = "centered">
+                <img src="/images/lab1/mic.png" alt="Microphone readings" class="responsive-img">
+            </div>
+            <h4><Strong>5000 Task - C Note Recognition:</Strong></h4>
+            <p>
+                As a student taking the 5000 level version of this class, I had the additional task of programming the board to blink the LED when
+                a musical "C" was played and picked up by the microphone. I approached this task by starting with the MicrophoneOutput example from the 
+                last task, renaming it to Cllink.ino. Firstly, I looked up what frequency middle C is at, which ends up being 261 Hertz. Then, in the print loudest 
+                function, I checked to see the loudest frequency was within 5 Hertz of this middle C value. If it was, I would then blink the LED once, following the 
+                blink example from earlier. However, there are multiple different Hertz values that are considered to be a musical C, depending on the octave. 261 Hertz 
+                is considered to be C4, or the C note of the fourth octave. I decided to also program several other common octaves (C3-C7) so it could recognize more C notes.
+                The code for this is as follows:
+                <code>
+                    <pre>
+                    float midc = 261;
+                    if((abs(0.5*midc-ui32LoudestFrequency) < 5) | //C3
+                      (abs(midc-ui32LoudestFrequency) < 5) | //C4, if 5 off middle c either way
+                      (abs(2*midc-ui32LoudestFrequency) < 5) | //C5 
+                      (abs(4*midc-ui32LoudestFrequency) < 5) | //C6
+                      (abs(8*midc-ui32LoudestFrequency) < 5)) { //C7
+                        digitalWrite(LED_BUILTIN, HIGH);  // turn the LED on (HIGH is the voltage level)
+                        delay(500);                      // wait for a second
+                        digitalWrite(LED_BUILTIN, LOW);   // turn the LED off by making the voltage LOW
+                        delay(500);       
+                    }
+                </pre>
+                </code>
+                Notably, by using delay to time the blink, the frequency can not be read while the light is blinking.
+                This means that if something that isn't C is played mid blink, the blink will still continue. This could be 
+                resolved by using some other mechanism to time the blink, such as a IRQ. This could allow a blink to not continue for a 
+                full second and be cut off early if C stopped being played. 
+            </p>
+
+            <div class = "centered">
+                <video width="320" height="240" controls>
+                    <source src="/images/lab1/cblink.qt" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
     </div>
 
 
