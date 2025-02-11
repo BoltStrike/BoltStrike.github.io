@@ -1,0 +1,182 @@
+
+<!-- Page Content  -->
+<link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="../css/style.css">
+
+<div class="wrapper d-flex align-items-stretch">
+    <div id="sidebar-container"></div>
+    <div class="stacked">
+        <div id="content" class="p-4 p-md-5 pt-5">
+            <h1 class="mb-4"><strong>Lab 2 - IMU </strong></h1>
+            <h4><Strong>Prelab:</Strong></h4>
+            <p>
+                To prepare for this lab, I installed the 9DOF IMU Arduino Library and connected the IMU to 
+                the Artemis. I then verified this installation by running the Example1_Basics. 
+                This example had a variable called AD0_VAL, which is the value of the last bit in the device's I2C address.
+                It is by default  1, but can be changed by closing a jumper. This I2C address must be unique from any other 
+                I2C devices accessed by the system, hence the capability to change it.
+                I also added 3 blinks of the built in LED to indicate when the board started up.
+            </p>
+            <div class = "centered">
+                <img src="/images/lab2/setup.png" alt="IMU Setup" class="responsive-img">
+                <p>An image of the IMU setup</p>
+
+                <video width="640" height="480" controls>
+                    <source src="/images/lab2/example.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+                <p>A video of the basic example being run, with the output shown by serial plotter</p>
+            </div>
+
+            <h4><Strong>Accelerometer</Strong></h4>
+            <p>
+                In order to convert the Accelerometer into outputing pitch and yaw, the following equations from lecture were used:
+            </p>
+            <div class = "centered">
+                <img src="/images/lab2/equations.png" alt="Roll and Pitch equations" class="responsive-img">
+            </div>
+            <p>
+                These equations have roll as about the X axis and pitch as about the Y axis. I calculated these in code using the lines:
+            </p>
+            <code>
+                <pre>
+                    pitch_a = atan2(myICM.accX(),myICM.accZ())*180/M_PI;
+                    roll_a = atan2(myICM.accY(),myICM.accZ())*180/M_PI; 
+                </pre>
+            </code>
+            <p>
+                I then validated that 0, 90, and -90 degrees were acheivable for both pitch and roll by setting the IMU against the side of the table,
+                as seen below:
+            </p>
+            <div class = "centered">
+                <img src="/images/lab2/table.png" alt="Using table for angles" class="responsive-img">
+            
+                <div class = "row">
+                    <div class = "column">
+                        <img src="/images/lab2/00.png" alt="0 Roll, 0 Pitch" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab2/roll90.png" alt="90 Roll, 0 Pitch" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab2/rollneg90.png" alt="-90 Roll, 0 Pitch" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab2/pitch90.png" alt="0 Roll, 90 Pitch" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab2/pitchneg90.png" alt="0 Roll, -90 Pitch" class="responsive-img">
+                    </div>
+                </div>
+                <p>
+                    Pitch and roll at 0, -90, 90 degrees
+                </p>
+            </div>
+            <p>
+                At this point I also implemented bluetooth, so that this data would be stored in an array on a 
+                bluetooth command, and then all sent at once with another bluetootch command. I then used matplotlib to 
+                plot the readings versus time in Jupyter. The graph below is for the following video showing roll:
+            </p>
+            <video width="640" height="480" controls>
+                <source src="/images/lab2/roll.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+            </video> 
+            <div class = "centered">
+                <img src="/images/lab2/rollgraph.png" alt="Roll and Pitch equations" class="responsive-img">
+            </div>
+
+            <p>
+                My accellerometer was initially pretty accurate, reading between -88 to 88 for roll and pitch when I put it at 90 degrees.
+                I used the following two point correction to make the range more accurate, and validated for positive and negative 90 and 180 degrees for roll and pitch. 
+            </p>
+            <code>
+                <pre>
+                    pitch_a = (((pitch_a + 88) * 180) / 176) - 90; //two point corrections
+                    roll_a = (((roll_a + 88) * 180) / 176) - 90;
+                </pre>
+            </code>
+            <p>
+                To help with noise, a Fourier Transform was used to determine a good cutoff frequency. I did my FFT in python as follows:
+            </p>
+            <div class = "centered">
+                <img src="/images/lab2/fourier.png" alt="Fourier code" class="responsive-img">
+            </div>
+            <p>
+                Notably, the period for it is calculated based off of the timestamps. This period could also be approximated by how long
+                the data gathering loop delayed, which for most of this lab is 30 ms. A captured frequency spectrum for oscillating pitch is shown below:
+            </p>
+            <div class = "centered">
+                <img src="/images/lab2/spectrum.png" alt="Fourier code" class="responsive-img">
+            </div>
+            <p>
+                As can be seen, there is a lot of noise at the higher frequencies.
+                I decided that the best cutoff frequency would be at the end of the largest occuring frequency, as all the other frequencies had 
+                much less magnitude. I decided for this cutoff to start at 0.5 hertz, although I also experimented with lower ones. I experimented
+                with hitting the table to introduce more noise to confirm that this would cut off that noise, which it would.
+                Then, a lowpass filter can be used to reduce noise. Using the RC lowpass filter equation and my cutoff frequency, 
+                I solved for an alpha value of 0.08. The following code then implements this lowpass filter.
+            </p>
+            <code>
+                <pre>
+                    //Low pass filter, about 0.25 Hz
+                    //0.5 = 1/2piRC -- RC = pi
+                    //alpha = T/(T+RC) -- T=30ms right now
+                    const float alpha = 0.08;
+                    //lowpass
+                    imu_data[iter][2] = alpha*pitch_a + (1-alpha)*imu_data[iter-1][2];
+                    imu_data[iter][3] = alpha*roll_a + (1-alpha)*imu_data[iter-1][3];
+          
+                    imu_data[iter-1][2] = imu_data[iter][2];
+                    imu_data[iter-1][3] = imu_data[iter][3];
+                </pre>
+            </code>
+            <p>
+                This gave the following frequency spectrum after filtering, with much less high frequency noise:
+            </p>
+            <div class = "centered">
+                <img src="/images/lab2/spectrumfilt.png" alt="Fourier code" class="responsive-img">
+            </div>
+            <p>
+                The before being filtered data and after filtering data is shown below:
+            </p>
+            <div class = "centered">
+                <div class = "row">
+                    <div class = "column">
+                        <img src="/images/lab2/before.png" alt="Before filter" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab2/after.png" alt="After Filter" class="responsive-img">
+                    </div>
+                </div>
+            </div>
+            <p>
+                As can be seen, most of the high frequency noise is removed, and a much smoother reading is shown.
+            </p>
+
+            <h4><Strong>Accelerometer</Strong></h4>
+
+
+
+
+
+            
+    </div>
+
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/popper.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/main.js"></script>
+
+    <script>
+        fetch("sidebar.html")
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("sidebar-container").innerHTML = data;
+                document.getElementById("sidebarCollapse").addEventListener("click", function () {
+                    document.getElementById("sidebar").classList.toggle("active");
+                });
+            });
+    </script>
+</div>
