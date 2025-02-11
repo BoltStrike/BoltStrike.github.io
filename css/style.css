@@ -8364,3 +8364,13 @@ a[data-toggle="collapse"] {
   flex-direction: column; /* Stack items vertically */
   width: 100%;
 }
+.row {
+  display: flex;
+  flex-wrap: wrap; /* Allows wrapping if there isn't enough space */
+
+}
+
+.column {
+  flex: 1; /* Ensures equal width distribution */
+  padding: 0px; /* Optional: Adds some spacing */
+}
