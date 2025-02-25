@@ -7,6 +7,15 @@
 #include "EString.h"
 #include "RobotCommand.h"
 #include <ArduinoBLE.h>
+#include <Wire.h>
+#include "SparkFun_VL53L1X.h" //Click here to get the library: http://librarymanager/All#SparkFun_VL53L1X
+
+//Necessary shutdown pin for xshut
+#define SHUTDOWN_PIN 0
+#define INTERRUPT_PIN 3 //not used
+
+SFEVL53L1X tof1;
+SFEVL53L1X tof2(Wire, SHUTDOWN_PIN, INTERRUPT_PIN);
 
 //////////// BLE UUIDs ////////////
 #define BLE_UUID_TEST_SERVICE "350447e4-252a-49ab-b5a3-46cfae2701aa"
@@ -67,16 +76,21 @@ enum CommandTypes
 {
     PING,
     GET_IMU_DATA,
+    GET_TOF_DATA,
     START_COLLECTION,
 };
 
 BLEDevice central;
 
-#define DATA_LENGTH 512
+#define DATA_LENGTH 128
 int iter = 0;
+int tof_iter1 = 0;
+int tof_iter2 = 0;
 int collecting = 0;
 float imu_data[DATA_LENGTH][9];
 int timestamps[DATA_LENGTH];
+int tof[DATA_LENGTH][2];
+int tofstamps[DATA_LENGTH];
 
 void
 handle_command()
@@ -145,10 +159,26 @@ handle_command()
           Serial.println(count);
           break;
         }
+        case GET_TOF_DATA:
+        {
+          for (int i = 0; i < DATA_LENGTH; i++){
+            tx_estring_value.clear();
+            tx_estring_value.append("tof1:");
+            tx_estring_value.append(tof[i][0]);
+            tx_estring_value.append("tof2:");
+            tx_estring_value.append(tof[i][1]);
+            tx_estring_value.append("T:");
+            tx_estring_value.append(tofstamps[i]);
+            tx_characteristic_string.writeValue(tx_estring_value.c_str());
+          }
+          break;
+        }
         case START_COLLECTION:
         {
           collecting = 1;
           iter = 0;
+          tof_iter1 = 0;
+          tof_iter2 = 0;
           count = 0;
           break;
         }
@@ -229,7 +259,32 @@ void setup()
     }
   }
 
-  
+  //Initialize tof sensors
+  Wire.begin();
+
+  pinMode(SHUTDOWN_PIN, OUTPUT);
+  digitalWrite(SHUTDOWN_PIN, LOW); //Turn off 2nd sensor with xshut
+  tof1.setI2CAddress(0x30); //give 1st sensor different address
+  digitalWrite(SHUTDOWN_PIN, HIGH); // Trun on second sensor
+
+  Serial.begin(115200);
+  Serial.println("VL53L1X Qwiic Test");
+
+  if (tof1.begin() != 0) //Begin returns 0 on a good init
+  {
+    Serial.println("Sensor1 failed to begin. Please check wiring. Freezing...");
+    while (1)
+      ;
+  }
+  if (tof2.begin() != 0) //Begin returns 0 on a good init
+  {
+    Serial.println("Sensor2 failed to begin. Please check wiring. Freezing...");
+    while (1)
+      ;
+  }
+  Serial.println("TOF Sensors online!");
+  tof1.setDistanceModeShort();
+  tof2.setDistanceModeShort();
 }
 
 void
@@ -279,6 +334,27 @@ void loop()
           // Read data
           read_data();
       }
+  }
+
+  if(collecting) {
+      //collect TOF data
+      tof1.startRanging(); //Write configuration bytes to initiate measurement
+      tof2.startRanging(); //Write configuration bytes to initiate measurement
+      if (tof1.checkForDataReady() && tof_iter1 < DATA_LENGTH) {
+        tof[tof_iter1][0] = tof1.getDistance(); //Get the result of the measurement from the sensor
+        tof1.clearInterrupt();
+        tof1.stopRanging();
+        tofstamps[tof_iter1] = millis();
+        tof_iter1 ++;
+      }
+      if (tof2.checkForDataReady() && tof_iter2 < DATA_LENGTH) {
+        tof[tof_iter2][1] = tof2.getDistance(); //Get the result of the measurement from the sensor
+        tof2.clearInterrupt();
+        tof2.stopRanging();
+        tof_iter2 ++;
+      }
+
+
   }
 
   if (myICM.dataReady())
@@ -349,10 +425,10 @@ void loop()
         //Comp filter
         
         iter ++;
+        delay(30);
     }
 
     //Sampling rate
-    delay(60);
 
 
     //printAccRollPitch(myICM);
