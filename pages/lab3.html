@@ -33,7 +33,7 @@
             </p>
             <p>
                 To communicate to the two IMUs, either each one had to be communicated to one at a time or the address of one needed to be changed, as they both 
-                start with the same I2C address. I decided to change the address of one on program startup, as the other approach means data can't be gotten from 
+                start with the same I2C address of 0x52. I decided to change the address of one on program startup, as the other approach means data can't be gotten from 
                 both sensors simultaneously. I decided to connect each TOF to a longer QWIIC cable so they could be placed as needed on the car, while the IMU would be 
                 connected with a shorter one. The below shows the schematic I decided on for connecting these sensors:
             </p>
@@ -150,7 +150,7 @@
                 permanently connected to the Artemis. This may be changed later as the car design is finalized.
             </p>
             <div class = "centered">
-                <img src="TOF2.jpg" alt="Second TOF sensor" class="responsive-img">
+                <img src="/images/lab3/TOF2.jpg" alt="Second TOF sensor" class="responsive-img">
             </div>
             <p>
                 In order to run both sensors, on startup XSHUT needs to be held low to disable the second TOF sensor. Then, the address of the first TOF sensor 
@@ -172,7 +172,7 @@
                 After this, each sensor can be used with the <code>.startRanging()</code> and any other ranging commands simulateously without problems.
             </p>
             <div class = "centered">
-                <img src="bothrunning.png" alt="Both TOF sensors running" class="responsive-img">
+                <img src="/images/lab3/bothrunning.png" alt="Both TOF sensors running" class="responsive-img">
             </div>
 
             <h4><Strong>Speed of Execution</Strong></h4>
@@ -210,12 +210,13 @@
                 Running this gave the following output:
             </p>
             <div class = "centered">
-                <img src="nonblocking.png" alt="Sensor reading running non blocking" class="responsive-img">
+                <img src="/images/lab3/nonblocking.png" alt="Sensor reading running non blocking" class="responsive-img">
             </div>
             <p>
                 The loop averaged taking only 7 milliseconds to complete this way, being roughly the same whether or not sensor data was available.
                 This is much faster than the delay method. Likely, this loop would run even faster, but the Serial print outs used to display the loop 
-                time are probably taking significant time.
+                time are probably taking significant time. If the serial prints were removed, then the next bottleneck would likely be that I am repeatedly 
+                restarting ranging, which may not be necessary.
             </p>
 
             <h4><Strong>Bluetooth and IMU integration</Strong></h4>
@@ -224,7 +225,7 @@
                 in the following setup:
             </p>
             <div class = "centered">
-                <img src="fullconnect.jpg" alt="All sensors connected" class="responsive-img">
+                <img src="/images/lab3/fullconnect.jpg" alt="All sensors connected" class="responsive-img">
             </div>
             <p>
                 I leveraged the same data collecting flag from lab 2 which 
@@ -234,14 +235,20 @@
                 transfer this data over BLE. With this, I recorded TOF data vs time for both sensors:
             </p>
             <div class = "centered">
-                <img src="toftime.png" alt="TOF measurements vs Time" class="responsive-img">
+                <img src="/images/lab3/toftime.png" alt="TOF measurements vs Time" class="responsive-img">
+            </div>
+            <p>
+                Here is the IMU complementary filter sensor data measured at the same time:
+            </p>
+            <div class = "centered">
+                <img src="/images/lab3/imu.png" alt="Angle vs Time" class="responsive-img">
             </div>
             <p>
                 The next graph shows both the complementary filter IMU adata and TOF data plotted on the same graph to prove they were captured simulataneously. 
                 The IMU colllects all of its datapoints much faster than the TOF, although the timing budget hasn't been minimized yet.
             </p>
             <div class = "centered">
-                <img src="tofimu.png" alt="TOF measurements vs IMU" class="responsive-img">
+                <img src="/images/lab3/tofimu.png" alt="TOF measurements vs IMU" class="responsive-img">
             </div>
 
             <h4><Strong>5000 Level Questions</Strong></h4>
@@ -258,13 +265,13 @@
                 I measured several different colors and materials each at 500 millimeters to see how the reading would change. 
             </p>
             <div class = "centered">
-                <img src="purple.jpg" alt="Purple Material" class="responsive-img">
+                <img src="/images/lab3/purple.jpg" alt="Purple Material" class="responsive-img">
             </div>
             <p>
                 The following table displays these results:
             </p>
             <div class = "centered">
-                <img src="color.png" alt="Materials and Colors" class="responsive-img">
+                <img src="/images/lab3/color.png" alt="Materials and Colors" class="responsive-img">
             </div>
             <p>
                 There were only very subtle differences in different colors, but they were not the same. In my experimentation, white materials 
