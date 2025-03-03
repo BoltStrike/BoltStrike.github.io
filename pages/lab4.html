@@ -142,8 +142,17 @@
             </div>
             <p>
                 To fix this, I used a multiplication factor to increase the pwm written to the left wheels. I found at low speeds a value of
-                1.52 worked the best, although at higher speeds a value of 1.4 was sufficient. The following shows the car going in a straight line.
+                1.52 worked the best, although at higher speeds a value of 1.4 was sufficient. The following code shows the adjustment
+                variable I played with, and the car going in a straight line.
             </p>
+            <code>
+                <pre>
+                    analogWrite(sig1, 140);
+                    analogWrite(sig3, 140*adjust);
+                    analogWrite(sig2, 0);
+                    analogWrite(sig4, 0);
+                </pre>
+            </code>
 
             <div class="centered">
                 <video width="640" height="480" controls>
@@ -153,6 +162,8 @@
             </div>
 
             <p>
+                I experimented with adding a flat value instead of multiplying, and found 40 worked alright, 
+                but overall the multiplicative scaling was more consistent.
                 I also found that setting both motors to 0 to stop it would result in the car pivoting left. I counteracted this in code by running the right motors
                 in reverse for a short period when stopping.
             </p>
