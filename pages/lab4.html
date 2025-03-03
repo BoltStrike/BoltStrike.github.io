@@ -23,8 +23,8 @@
             </div>
             <p>
                 In order to be able to drive the motors, the GPIO pins had to be PWM capable, which meant pins 8 and 10 couldn't be used.
-                Additionally, they had to be analog pins. I ultimately used pins A3, A14, A15, and A16 as they were all located on the opposite side of
-                the Artemis programming port, meaning the programming port could be easily accessible at the edge of the car while the pins would be closer to the 
+                Additionally, they had to be analog pins. I ultimately used pins A3, A14, A15, and A16 as they were located on the opposite side of
+                the Artemis programming port, meaning the programming port could be at the edge of the car while the pins would be closer to the 
                 motors. The full circuit with IMU and TOF sensors is below:
             </p>
             <div class = "centered">
@@ -42,10 +42,9 @@
             <h3><Strong>Lab:</Strong></h3>
             <h4><Strong>Verification of Motor Drivers</Strong></h4>
             <p>
-                The first step was to solder the motor driver connections to the Artemis and test that it could output appropriate PWM signals.
-                I experimented with a few ways to connect the outputs in parallel, but found the easiest was to through hole solder a wire for each 
-                connection, and then solder those wires together. To test the motor driver, I connected an oscilloscope to the output signal of the 
-                motor driver and grounded it. I powered the driver from an external power supply. I chose 3.7 volts as that is the voltage that the 
+                I first soldered the motor driver to the Artemis and tested it could output PWM signals.
+                To test the motor driver, I connected an oscilloscope to the output signal of the 
+                motor driver and grounded it. I powered the driver from an external power supply at 3.7 volts, as that is the voltage that the 
                 850 mAh battery will provide. A video showing the setup and the resulting 50 percent duty cycle pwm waves for both drivers is shown below:
             </p>
             <div class="centered">
@@ -99,10 +98,9 @@
             </div>
 
             <p>
-                I then affixed each component into the car. Each component is held in place by foam tape currently. I chose to place the motor drivers
+                I then affixed each component into the car with foam tape. I placed the motor drivers
                 by the cable for the 850 mAh battery and away from the Artemis and IMU to avoid EMF interference. I had the QWIIC multiport in 
-                the center of the car so each component could be easily reached, and put the TOF sensors on the outside, ensuring they were angled as 
-                to not just detect the ground.
+                the center so each component could be easily reached, and put the TOF sensors on the outside to detect obstaces..
                 
             </p>
             <div class = "centered">
@@ -111,14 +109,14 @@
 
             <h4><Strong>PWM Limits</Strong></h4>
             <p>
-                I then tested what PWM values the motors would actually operate under, by changing the values provided in AnalogWrite out of 255. Firstly, testing the car going forward with both motors, 
-                I found that an analog write value of 50 was sufficient to make the car go forward under load. Without load, this 
+                I then tested what PWM values the motors would actually operate under, by changing the values provided in AnalogWrite out of 255. Firstly, 
+                I found that an analog write value of 50 for both motors was sufficient to make the car go forward under load. Without load, this 
                 only drives one motor, implying that with load one motor was spinning the other wheels enough to overcome static friction. An analog write of 60, 
                 or 23.5% duty cycle would drive both forward without load. For going backwards, this went up to 70.
             </p>
             <p>
                 To have the car spin on axis, I found that a write of 140 was necessary to get both wheels running, although it took a bit for the left wheels to start moving. 150 
-                ensured that the car would immediately turn on the spot. The following video shows an on axis turn with write values of 140.
+                ensured that the car would immediately turn. The following video shows an on axis turn with write values of 140.
             </p>
 
             <div class="centered">
@@ -130,7 +128,7 @@
 
             <h4><Strong>Calibrating motors</Strong></h4>
             <p>
-                I found that my right wheels spun faster than my left wheels, and even rotating them by hand, I could feel that
+                I found that my right wheels spun faster than my left wheels, and rotating them by hand, I could feel that
                 the left wheels had more resistance. Running both wheels at 100 caused the car to veer left.
             </p>
 
@@ -164,7 +162,7 @@
             <p>
                 I experimented with adding a flat value instead of multiplying, and found 40 worked alright, 
                 but overall the multiplicative scaling was more consistent.
-                I also found that setting both motors to 0 to stop it would result in the car pivoting left. I counteracted this in code by running the right motors
+                I also found that setting both motors to 0 to stop it would result in the car pivoting left. I counteracted this by running the right motors
                 in reverse for a short period when stopping.
             </p>
             <code>
