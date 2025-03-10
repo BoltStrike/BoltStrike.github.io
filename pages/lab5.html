@@ -1,0 +1,498 @@
+
+<!-- Page Content  -->
+<link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="../css/style.css">
+
+<div class="wrapper d-flex align-items-stretch">
+    <div id="sidebar-container"></div>
+    <div class="stacked">
+        <div id="content" class="p-4 p-md-5 pt-5">
+            <h1 class="mb-4"><strong>Lab 5 - Linear PID control and Linear interpolation </strong></h1>
+            <p>
+                The goal of Lab 5 was to implement a closed loop control system. For this lab, I decided to implement 
+                a PID controller, with the goal of havig the car approach and stop one foot from an object.
+            </p>
+            <h3><Strong>Prelab:</Strong></h3>
+            <h4><Strong>Bluetooth:</Strong></h4>
+            <p>
+                Before starting on PID, I implemented bluetooth commands for both prompting the car to drive and recording/transmitting 
+                data. The code for starting the car driving and collecting data is below:
+            </p>
+            <code>
+                <pre>
+                    case DRIVE:
+                    {
+                      mycar.driving = 1;
+                      mycar.start_time = millis();
+                      mycar.e_pos = 0;
+                      break;
+                    }
+                </pre>
+            </code>
+            <p>
+                This case sets a flag to indicate the car should drive and colllect data in the main loop function, and records 
+                a start time. This start time is compared against the <code>millis()</code> command to see if 5 seconds have elapsed. 
+                If so, the car stops driving and recording data. This time is later extended to 20 seconds once the PID control is more
+                tuned. It also sets an index for iterating and recording data back to 0. Data can be sent back with the <code>GET_PID</code>
+                command below:
+            </p>
+            <code>
+                <pre>
+                    case GET_PID:
+                    {
+                    for (int i = 0; i < mycar.e_pos; i++) {
+                            tx_estring_value.clear();
+                            tx_estring_value.append("Prop:");
+                            tx_estring_value.append(mycar.e_hist[i]);
+                            tx_estring_value.append("Motor:");
+                            tx_estring_value.append(mycar.motor_hist[i]);
+                            tx_estring_value.append("Time:");
+                            tx_estring_value.append(mycar.t_hist[i]);
+                            tx_characteristic_string.writeValue(tx_estring_value.c_str());
+                    }
+                    break;
+                    }
+                </pre>
+            </code>
+            <p>
+                This writes proportional error, motor control, and timestamps to the Python script over bluetooth. This is prompted with 
+                <code>ble.send_command(CMD.GET_PID, "")</code>, where a notification handler parses the values into an array to graph, as below:
+            </p>
+            <code>
+                <pre>
+                    prop = []
+                    time = []
+                    motor = []
+                    def pid_data_handler(uuid, bytearr):
+                        try:
+                            tofdata = ble.bytearray_to_string(bytearr)
+                            arr = tofdata.split("Prop:")[1] #Split messages
+                            prop1, arr = arr.split("Motor:")
+                            motor1, time1 = arr.split("Time:")
+                            prop.append(int(prop1))
+                            motor.append(int(motor1))
+                            time.append(int(time1))
+                        except Exception as e:
+                            print(e)
+
+
+                    ble.start_notify(ble.uuid['RX_STRING'], pid_data_handler)
+                </pre>
+            </code>
+            <p>
+                The TOF data is sent separately with its own timestamps using a command implemented in lab 3, with its own notification handler. I additionally added a <code>SET_KPID</code>
+                command to tune KP, KI, and KD without reprogramming, seen below:
+            </p>
+            <code>
+                <pre>
+                    case SET_KPID:
+                    {
+                        float P, I, D;
+            
+                        success = robot_cmd.get_next_value(P);
+                        if (!success)
+                          return;
+            
+                        success = robot_cmd.get_next_value(I);
+                        if (!success)
+                          return;
+            
+                        success = robot_cmd.get_next_value(D);
+                        if (!success)
+                            return;
+                        mycar.SKP = P;
+                        mycar.SKI = I;
+                        mycar.SKD = D;
+                        break;
+                    }
+                </pre>
+            </code>
+
+            <h3><Strong>Lab:</Strong></h3>
+            <h4><Strong>PID Control:</Strong></h4>
+            <p>
+                To implement my PID control, I started by making a car class which would contain all variables for the car.
+                This includes variables for last tof readings, arrays for errors, motor history, and timestamps to send over bluetooth, 
+                and variables pertaining to PID control. Later, values for TOF extrapolation are also stored here.
+            </p>
+            <code>
+                <pre>
+                    class Car {
+                        public:
+                            float fronttof = -5160; //Front TOF
+                            float last_frontof = -5160; //Last front TOF reading, for extrap
+                            int righttof; //Right TOF sensor
+                            int dt; //Time between PID loop iters
+                        
+                            int driving = 0; //flag for currently driving
+                            int start_time = 0; //Value for time out
+                        
+                            //Data arrays for BLE graphing
+                            int e_hist[PID_LENGTH];
+                            int t_hist[PID_LENGTH];
+                            int motor_hist[PID_LENGTH];
+                        
+                        
+                            int e_pos; //index in arrays
+                            //PID values
+                            float I=0;
+                            float dF=0;
+                            float SKP = 0.055;
+                            float SKI = 0.003;
+                            float SKD = 0.016;
+                            
+                            //Deadband values
+                            int last_drive=0;
+                            int deadtime = 0;
+                        
+                        
+                            //extrapolation values
+                            float slope = -5160;
+                            int last_tof = 0;
+                        
+                        };
+                </pre>
+            </code>
+            <p>
+                Since I am a 5000 level student, I had to decide between PI and PID control. I chose PID as the derivative term allows for 
+                more control over how much the car overshoots and makes the controller more precise overall. My methodology was to start 
+                by tuning the proportional control, keeping KI and KD at 0 until I liked it. I wrote my PID control by referring to the 
+                provided PID-FastRobots.ipynb and class notes, with below showing just the P control.
+            </p>
+
+            <code>
+                <pre>
+                    float calc_pid(int dist, int setpoint, float KP = mycar.SKP, float KI = mycar.SKI, float KD = mycar.SKD, float alpha = 0.9) {
+
+                        //proportional terms
+                        int e = dist-setpoint;
+                        mycar.e_hist[mycar.e_pos] = e;
+                        mycar.t_hist[mycar.e_pos] = millis();
+                        mycar.e_pos ++;
+                      
+                        if (mycar.e_pos >= PID_LENGTH) { 
+                          mycar.e_hist[0] = mycar.e_hist[PID_LENGTH-2];
+                          mycar.e_hist[1] = mycar.e_hist[PID_LENGTH-1];
+                          mycar.t_hist[0] = mycar.t_hist[PID_LENGTH-2];
+                          mycar.t_hist[1] = mycar.t_hist[PID_LENGTH-1];
+                          mycar.motor_hist[0] = mycar.motor_hist[PID_LENGTH-2];
+                          mycar.motor_hist[1] = mycar.motor_hist[PID_LENGTH-1];
+                          for(int i = 2; i < PID_LENGTH; i++) {
+                            mycar.e_hist[i] = 0;
+                          }
+                          mycar.e_pos = 2;
+                        }
+
+                        return KP*e; //P sum
+                </pre>
+            </code>
+            <p>
+                The P term is the difference between a setpoint and the TOF reading. The setpoint used was 304 millimeters, or one foot.
+                I wanted the output to be roughly between -166 and 166, as these were the max analog pwm values for my car with scaling considered.
+                I then approximated that I would want the car to go max speed until about 2000 millimeters from target and then slow down. Taking 166/2000,
+                I got a value of 0.083, which is what I started my KP at. I found that this had the car approach the wall too fast and run into it, so I tuned 
+                it down, finding 0.055 to be a good balance of approach speed while not overshooting as far. I additionally had to implement clamping on the output 
+                value, making it not allowed to go above 166 or below -166, and also keeping it outside of my deadband of 50 to -50. 
+                Additionally, I had to change the TOF sensors to be in long range mode so it could see the wall starting 2+ meters away,
+                and I set the timing budget for these sensors to be 33 milliseconds, which is as fast as possible for the long mode. This 
+                allows for more frequent TOF readings and therefore better control.
+                The following video demonstrates this proportional only control.
+            </p>
+            <div class="centered"></div>
+                <video width="640" height="480" controls>
+                    <source src="/images/lab5/P.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+            <p>
+                This KP value of 0.055 had the car overshoot the target, and then backup and oscillate around it until stopping. Lower KP values 
+                would minimize this overshoot, but made the approach much slower, so I stuck with this value. In order to stop the car, I took 
+                an average of the last 15 error readings. If this mean was below 3 millimeters, the car would stop as it was oscillating roughly on
+                the target spot. I additionally implemented code from lab 4 that overcomes static friction for lowspeed commands, with PWMs of under 70 
+                being run at 70 for 25 milliseconds before dropping to the slower value. The recorded graphs for this run are below:
+            </p>
+            <div class = "centered">
+                <div class = "row">
+                    <div class = "column">
+                        <img src="/images/lab5/PERROR.png" alt="P Error" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab5/PTOF.png" alt="P TOF" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab5/Pmotor.png" alt="P Motor control" class="responsive-img">
+                    </div>
+                </div>
+                <p>
+                    Proportional control error, TOF readings, and Motor output
+                </p>
+            </div>
+            <p>
+                These graphs show how the car oscillated around the target before eventually stopping, with the motor control 
+                deadband of 50 to -50 being especially evident.
+            </p>
+            <p>
+                Next I implemented derivative control. This leveraged the error data I was already collecting, shown in the following code
+            </p>
+            <code>
+                <pre>
+                    ...
+                    if (mycar.e_pos > 1) {
+
+                        float d = (mycar.e_hist[mycar.e_pos-1] - mycar.e_hist[mycar.e_pos-2]) / (float(mycar.dt)/1000);
+                        mycar.dF = d*alpha + (1-alpha)* mycar.dF;
+                      }
+                      else {
+                        mycar.dF = 0;
+                      }
+                      return KP*e + KD*mycar.dF;
+                </pre>
+            </code>
+            <p>
+                The derivative's purpose is to dampen the control, comparing change in error over time. I experimented with 
+                different KD values to try to reduce overshoot and total oscillations. I found a KD of 0.016 seemed to work best, which 
+                makes sense as the derivative term shouldn't overpower the proportional. Additionally, I used a lowpass filter on this 
+                derivative with an alpha of 0.9 to help reduce sensor noise. For this assignment, since the setpoint is always the same,
+                I didn't address derivative kick yet.
+                With PD control, I got the following performance:
+            </p>
+
+            <div class="centered"></div>
+                <video width="640" height="480" controls>
+                    <source src="/images/lab5/D.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+
+            <p>
+                This overshot the target point much less and had overall smaller oscillations. The graphs for this control are as follows:
+            </p>
+
+            <div class = "centered">
+                <div class = "row">
+                    <div class = "column">
+                        <img src="/images/lab5/DError.png" alt="D Error" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab5/DTOF.png" alt="D TOF" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab5/Dmotor.png" alt="D Motor control" class="responsive-img">
+                    </div>
+                </div>
+                <p>
+                    PD control error, TOF readings, and Motor output
+                </p>
+            </div>
+
+            <p>
+                Interestingly, the derivative control introduced oscillations into the actual PWM sent to the motor. Smaller KD's minimize
+                these oscillations, but I found KD= 0.016 to be the best for approaching and stopping on the spot.
+            </p>
+            <p>
+                I finally added the integral control. This accumulates overtime to help counteract steady state error. An example of 
+                where this type of control is useful is on a hill or rough terrain, where the PD control term isn't high enough to move the vehicle.
+                The code for this is below:
+            </p>
+            <code>
+                <pre>
+                    ...
+                    mycar.I += e * float(mycar.dt)/1000; // integral term
+                    return KP*e + KD*mycar.dF + KI*mycar.I; //PID sum
+                </pre>
+            </code>
+            <p>
+                This integral term isn't as impactful when running the car on smooth tiles, so for calibrating, I started with a high KI and 
+                decreased it until the car was close to the PD performance, while still keeping it high enough to reduce the oscillations caused 
+                by error in the sensor readings. I ended up with a KI of 0.003. The performance of the PID control is below:
+            </p>
+
+            <div class="centered"></div>
+            <video width="640" height="480" controls>
+                <source src="/images/lab5/I.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+
+            <p>
+                This causes the car to stop on the target with minimal oscillations, overall giving the best performance. The graphs for this run 
+                are below:
+            </p>
+
+            <div class = "centered">
+                <div class = "row">
+                    <div class = "column">
+                        <img src="/images/lab5/IError.png" alt="I Error" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab5/ITOF.png" alt="I TOF" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab5/Imotor.png" alt="I Motor control" class="responsive-img">
+                    </div>
+                </div>
+                <p>
+                    PID control error, TOF readings, and Motor output
+                </p>
+            </div>
+
+            <p>
+                This error and TOF show that the car overshot by even less than the PD control and roughly stopped on the spot. This 
+                is also reflected by the motor control not going in reverse for a significant period of time. I calculated the rough 
+                maximum speed that was being acheived repeatablly off of the TOF graph, seeing it goes about 2000 millimeters in 1.75 seconds,
+                or 1.14 m/s or 3.28 ft/s. Granted, the motor controller shows that the car isn't consistently driven at the max PWM of 166, so 
+                starting further away the car should go even faster.
+            </p>
+
+            <h3><Strong>Extrapolation</Strong></h3>
+            <p>
+                Using timestamps from my error graph versus my TOF graph in python, I observed that my TOF data was collected every 
+                30-40 ms, whereas the PID loop ran every 12 ms consitently. I coded the TOF readings to occur at the beginning of the PID
+                loop while being non blocking, so this meant the PID loop ran roughly 3 times as fast as the TOF readings, or each TOF 
+                reading would be used 3 times for PID calculations. This also impacts the D term, as it would be 0 whenever a new TOF reading
+                didn't come in. The solution to this was to extrapolate TOF readings inbetween the actual sensor return. I did this 
+                by taking the time and value of the last two TOF readings. By subtracting the current TOF reading from the last one and dividing 
+                by the difference in times, I got a slope of the mm/ms that the TOF was changing by. By multiplying this by the time since the 
+                last TOF reading and adding that to the TOF value, I approximated what the actual value would be. This is done in the following
+                TOF code:
+            </p>
+            <code>
+                <pre>
+                    //collect TOF data
+                    
+                    if (tof1.checkForDataReady()) {
+                        //Serial.println("here");
+                        int new_time = millis();
+                        int dist = tof1.getDistance();
+                        if(mycar.fronttof != -5160) {
+                        float diff_time = new_time - mycar.last_tof;
+                        float diff_meas = dist - mycar.last_frontof;
+                        mycar.slope = diff_meas/diff_time;
+                        }
+                    
+                        mycar.last_tof = new_time;
+                        mycar.fronttof = dist; //Get the result of the measurement from the sensor
+                        mycar.last_frontof = dist;
+                    
+                        tof1.clearInterrupt();
+                        tof1.stopRanging();
+                        tof1.startRanging();
+                        if(tof_iter1 < DATA_LENGTH && collecting) {
+                        tof[tof_iter1][0] = mycar.fronttof;
+                        tofstamps[tof_iter1] = millis();
+                        tof_iter1 ++;
+                        }
+                    }
+                    else { //extrapolate tof
+                        if(mycar.slope != -5160) { //if valid slope
+                        float dif_time = millis() - mycar.last_tof; //find time diff
+                        mycar.fronttof = mycar.last_frontof + dif_time*mycar.slope; //Extrapolate TOF reading
+                        if(tof_iter1 < DATA_LENGTH && collecting) { //record for bluetooth
+                            tof[tof_iter1][0] = mycar.fronttof;
+                            tofstamps[tof_iter1] = millis();
+                            tof_iter1 ++;
+                        }
+                        }
+                    }
+                </pre>
+            </code>
+
+            <p>
+                Notably, two TOF readings are needed for this to work, so I used a placeholder value of -5160 to make sure 
+                that this condition was met. Running the PID with this code ended up looking very similar to the above runs. However,
+                I validated that the change actually did function by printing the extrapolated values from my TOF graph, seen below.
+            </p>
+            <div class = "centered">
+                <img src="/images/lab5/TOFextrap.png" alt="TOF Extrapolation" class="responsive-img">
+            </div>
+            <p>
+                Additionally, I checked how often the TOF was being updated now, with the timestamps shown below.
+            </p>
+            <div class = "centered">
+                <img src="/images/lab5/TOFTime.png" alt="TOF Time" class="responsive-img">
+            </div>
+            <p>
+                This shows the TOF being calculated and changed at the same rate as the PID loop, about every 12 ms. While the general
+                behavior with this was the same, I found the performance of the car to be more consistent in stopping on the spot, as 
+                sometimes the car could get a TOF value late and overshoot more without this extrapolation.
+            </p>
+
+            <h3><Strong>5000 Tasks:</Strong></h3>
+            <h4><Strong>Integrator Windup:</Strong></h4>
+            <p>
+                When using an integrator term for PID, windup becomes an issue. This is when the integrator grows too large and is unable 
+                to shrink fast enough, resulting in the car travelling well past the target point. An example where this could occur is transitioning
+                from a surface the car moves slow on to one it moves fast on. To demonstrate this issue, I held the car in my hand to let this 
+                term build up, and then released it in the following video.
+            </p>
+            <div class="centered"></div>
+            <video width="640" height="480" controls>
+                <source src="/images/lab5/windup.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+            <p>
+                By the time the car is let go, the integral term has built up so high that the car will always run at max speed, running 
+                directly into the wall without stopping. To fix this, the integral term needs to be clamped, which I do in the following code:
+            </p>
+            <code>
+                <pre>
+                    mycar.I += e * float(mycar.dt)/1000; // integral term
+                    if(mycar.I > 1000) {
+                      mycar.I = 1000;
+                    }
+                    else if (mycar.I < -1000){
+                      mycar.I = -1000;
+                    }
+                </pre>
+            </code>
+            <p>
+                I decided to clamp it to 1000 by experimenting with what the max value that still allowed the car to stop on target was. Too small 
+                of a value will prevent the integral term from functioning, and too large will not prevent the windup. 1000 seemed to work well for this 
+                purpose, shown in the video below.
+            </p>
+            <div class="centered"></div>
+            <video width="640" height="480" controls>
+                <source src="/images/lab5/nowindup.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+            <p>
+                With the same setup of letting the integrator term increase, this clamp prevents it from getting too high, having the car still stop on target. 
+                This clamp value could be increased if the integrator term was not performant enough for particular conditions, but as stated before, it has to
+                be balanced to prevent too much windup.
+            </p>
+
+            <h4><Strong>References</Strong></h4>
+            <p>
+                I worked in the lab section on this code with Giorgi Berndt and Jorge Corpa Chunga, discussing the general approach but not 
+                specific code. When working on tuning the PID values,I also collaborated with Aidan McNay. 
+                For determining how to demonstrate and solve the integrator windup, Giorgi and I collaborated 
+                to come up with the idea of holding it in place to build up the error.
+                I additionally referred to the Lecture slides for PID and the PID-FastRobots.ipynb code as a basis for 
+                creating my PID funciton.
+            </p>
+
+
+
+            
+    </div>
+
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/popper.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/main.js"></script>
+
+    <script>
+        fetch("sidebar.html")
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("sidebar-container").innerHTML = data;
+                document.getElementById("sidebarCollapse").addEventListener("click", function () {
+                    document.getElementById("sidebar").classList.toggle("active");
+                });
+            });
+    </script>
+</div>
