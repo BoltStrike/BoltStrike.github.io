@@ -199,7 +199,7 @@
                 allows for more frequent TOF readings and therefore better control.
                 The following video demonstrates this proportional only control.
             </p>
-            <div class="centered"></div>
+            <div class="centered">
                 <video width="640" height="480" controls>
                     <source src="/images/lab5/P.mp4" type="video/mp4">
                 Your browser does not support the video tag.
@@ -366,9 +366,9 @@
                         int new_time = millis();
                         int dist = tof1.getDistance();
                         if(mycar.fronttof != -5160) {
-                        float diff_time = new_time - mycar.last_tof;
-                        float diff_meas = dist - mycar.last_frontof;
-                        mycar.slope = diff_meas/diff_time;
+                            float diff_time = new_time - mycar.last_tof;
+                            float diff_meas = dist - mycar.last_frontof;
+                            mycar.slope = diff_meas/diff_time;
                         }
                     
                         mycar.last_tof = new_time;
@@ -379,20 +379,20 @@
                         tof1.stopRanging();
                         tof1.startRanging();
                         if(tof_iter1 < DATA_LENGTH && collecting) {
-                        tof[tof_iter1][0] = mycar.fronttof;
-                        tofstamps[tof_iter1] = millis();
-                        tof_iter1 ++;
-                        }
-                    }
-                    else { //extrapolate tof
-                        if(mycar.slope != -5160) { //if valid slope
-                        float dif_time = millis() - mycar.last_tof; //find time diff
-                        mycar.fronttof = mycar.last_frontof + dif_time*mycar.slope; //Extrapolate TOF reading
-                        if(tof_iter1 < DATA_LENGTH && collecting) { //record for bluetooth
                             tof[tof_iter1][0] = mycar.fronttof;
                             tofstamps[tof_iter1] = millis();
                             tof_iter1 ++;
                         }
+                    }
+                    else { //extrapolate tof
+                        if(mycar.slope != -5160) { //if valid slope
+                            float dif_time = millis() - mycar.last_tof; //find time diff
+                            mycar.fronttof = mycar.last_frontof + dif_time*mycar.slope; //Extrapolate TOF reading
+                            if(tof_iter1 < DATA_LENGTH && collecting) { //record for bluetooth
+                                tof[tof_iter1][0] = mycar.fronttof;
+                                tofstamps[tof_iter1] = millis();
+                                tof_iter1 ++;
+                            }
                         }
                     }
                 </pre>
