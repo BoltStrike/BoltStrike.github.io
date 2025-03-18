@@ -1,0 +1,226 @@
+2025-03-09 15:19:57,612 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 15:20:00,600 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 15:21:15,438 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 15:21:32,293 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 15:21:35,273 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 15:23:46,350 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 15:24:18,663 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 15:24:51,440 | MainThread   | [ERROR   ] | _connect            |: disconnected
+2025-03-09 15:24:52,453 | MainThread   | [WARNING ] | connect             |: Attempting to connect again...
+2025-03-09 15:24:52,455 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 15:25:45,669 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 15:25:58,234 | MainThread   | [ERROR   ] | _connect            |: disconnected
+2025-03-09 15:25:59,242 | MainThread   | [WARNING ] | connect             |: Attempting to connect again...
+2025-03-09 15:25:59,247 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 15:26:10,307 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 15:31:19,471 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 15:36:27,216 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 15:36:30,230 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 15:38:46,674 | MainThread   | [INFO    ] | _connect            |: Already connected to a BLE device
+2025-03-09 15:39:26,360 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 15:40:22,944 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 15:40:26,147 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 15:41:43,432 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 15:42:45,433 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 15:42:48,575 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 15:46:12,742 | MainThread   | [INFO    ] | _connect            |: Already connected to a BLE device
+2025-03-09 15:46:43,735 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 15:49:28,290 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 15:49:31,376 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 15:50:33,909 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 15:50:50,888 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 15:50:53,997 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 15:51:39,601 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 15:51:53,993 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 15:52:26,202 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 15:52:31,350 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 15:53:21,679 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 15:53:34,398 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 15:53:45,571 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 16:20:27,491 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 16:20:30,868 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 16:21:15,325 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 16:21:33,915 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 16:21:37,048 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 16:25:49,716 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 16:26:40,572 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 16:26:43,570 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 16:27:28,374 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 16:27:35,958 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 16:27:39,336 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 16:31:28,756 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 16:31:45,906 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 16:31:49,302 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 16:33:16,234 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 16:33:49,525 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 16:33:57,639 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 16:35:45,674 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 16:35:58,947 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 16:36:02,377 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 16:43:27,342 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 16:43:51,961 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 16:43:54,946 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 16:45:27,686 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 16:46:21,291 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 16:46:53,757 | MainThread   | [ERROR   ] | _connect            |: disconnected
+2025-03-09 16:46:54,772 | MainThread   | [WARNING ] | connect             |: Attempting to connect again...
+2025-03-09 16:46:54,776 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 16:46:57,799 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 16:48:20,816 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 16:48:41,215 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 16:48:44,179 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 16:48:56,057 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 16:48:59,579 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 16:49:04,613 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 16:49:45,824 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 16:49:59,022 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 16:50:02,001 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 16:51:04,112 | MainThread   | [INFO    ] | _connect            |: Already connected to a BLE device
+2025-03-09 16:51:09,578 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 16:51:12,126 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 16:51:17,182 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 16:52:40,901 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 16:52:58,561 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 16:53:01,555 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 16:54:22,865 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 16:55:05,149 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 16:55:08,034 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 16:58:23,366 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 17:13:23,474 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 17:13:26,587 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 17:16:18,450 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 17:16:59,080 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 17:17:01,962 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 17:19:34,655 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 17:19:54,714 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 17:19:57,676 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 17:22:09,701 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 17:22:37,021 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 17:22:40,149 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 17:26:42,824 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 17:27:56,831 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 17:28:01,839 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 17:28:50,419 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-09 17:29:13,618 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-09 17:29:16,839 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-09 17:31:06,032 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-11 15:38:59,901 | MainThread   | [DEBUG   ] | __init__            |: Python Info: sys.version_info(major=3, minor=13, micro=1, releaselevel='final', serial=0)
+2025-03-11 15:38:59,902 | MainThread   | [DEBUG   ] | __init__            |: System Info: macOS-14.1-arm64-arm-64bit-Mach-O
+2025-03-11 15:38:59,903 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-11 15:39:02,894 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-11 15:39:07,476 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-11 15:39:27,597 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-11 15:39:30,493 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-11 16:07:05,291 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-11 16:09:22,272 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-11 16:09:25,379 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-11 16:11:10,466 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-11 16:14:56,141 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-11 16:14:59,166 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-11 16:15:20,572 | MainThread   | [INFO    ] | _connect            |: Already connected to a BLE device
+2025-03-11 16:25:28,688 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-11 16:26:19,426 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-11 16:26:22,492 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-11 16:32:57,789 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-17 23:51:13,398 | MainThread   | [DEBUG   ] | __init__            |: Python Info: sys.version_info(major=3, minor=13, micro=1, releaselevel='final', serial=0)
+2025-03-17 23:51:13,399 | MainThread   | [DEBUG   ] | __init__            |: System Info: macOS-14.1-arm64-arm-64bit-Mach-O
+2025-03-17 23:51:13,399 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-17 23:51:18,753 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-17 23:57:34,289 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-17 23:57:43,401 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-17 23:57:47,915 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 00:03:01,384 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 00:21:23,640 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 00:21:26,563 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 00:23:06,638 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 00:23:57,910 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 00:24:00,853 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 00:25:50,682 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 00:26:00,795 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 00:26:03,793 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 00:31:36,435 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 00:31:44,075 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 00:31:47,058 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 00:34:06,051 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 00:34:39,555 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 00:34:42,589 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 00:38:50,675 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 00:39:09,725 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 00:39:12,774 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 00:39:22,222 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 00:39:33,271 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 00:39:36,232 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 00:45:00,487 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 00:45:20,645 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 00:45:23,675 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 00:48:51,061 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 00:49:02,539 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 00:49:05,944 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 01:16:37,275 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 01:16:52,318 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 01:17:16,105 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 01:17:19,040 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 01:17:39,041 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 01:18:01,020 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 01:18:04,016 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 01:20:33,694 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 01:20:47,175 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 01:20:50,179 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 01:23:53,239 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 02:17:03,727 | MainThread   | [DEBUG   ] | __init__            |: Python Info: sys.version_info(major=3, minor=13, micro=1, releaselevel='final', serial=0)
+2025-03-18 02:17:03,727 | MainThread   | [DEBUG   ] | __init__            |: System Info: macOS-14.1-arm64-arm-64bit-Mach-O
+2025-03-18 02:17:03,727 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 02:17:06,670 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 02:21:43,073 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 02:34:06,752 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 02:34:09,729 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 02:34:58,681 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 02:35:12,676 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 02:35:16,088 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 02:48:30,256 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 02:57:18,343 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 02:57:21,280 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 02:57:57,734 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 02:58:01,509 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 02:58:06,759 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 03:08:44,595 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 03:11:38,888 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 03:11:41,905 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 03:13:01,454 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 03:13:23,190 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 03:13:26,182 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 03:16:22,442 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 03:16:25,697 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 03:16:31,585 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 03:20:03,131 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 03:22:55,595 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 03:22:58,520 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 03:26:26,268 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 03:26:34,019 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 03:26:37,073 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 03:26:46,278 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 03:26:52,813 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 03:26:55,913 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 03:45:53,656 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 03:46:46,753 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 03:46:49,714 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 03:49:17,654 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 03:50:06,140 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 03:50:09,114 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 03:51:42,156 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 03:51:45,656 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 03:51:51,207 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 03:54:27,943 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 03:55:36,341 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 03:55:39,233 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 03:56:00,778 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 03:56:13,144 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 03:56:16,135 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 03:59:05,146 | MainThread   | [INFO    ] | _connect            |: Already connected to a BLE device
+2025-03-18 04:01:48,500 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 04:01:53,724 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 04:01:57,177 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 04:02:15,598 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76
+2025-03-18 04:03:22,095 | MainThread   | [INFO    ] | _connect            |: Looking for Artemis Nano Peripheral Device: C0:81:8D:26:04:64
+2025-03-18 04:03:25,012 | MainThread   | [INFO    ] | _connect            |: Connected to C0:81:8D:26:04:64
+2025-03-18 04:04:35,223 | MainThread   | [INFO    ] | disconnect_handler  |: Disconnected from 1EFFEDB9-73BA-9396-D724-47E443C12C76

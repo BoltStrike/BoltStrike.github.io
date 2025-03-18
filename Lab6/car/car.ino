@@ -87,7 +87,9 @@ enum CommandTypes
     DRIVE,
     GET_PID,
     SET_KPID,
-    ORIENT
+    ORIENT,
+    SET_OPID,
+    SET_TARGET
 };
 
 BLEDevice central;
@@ -99,7 +101,7 @@ int tof_iter1 = 0;
 int tof_iter2 = 0;
 int collecting = 0;
 float adjust = 1.52;
-#define PID_LENGTH 1024
+#define PID_LENGTH 4096
 
 float imu_data[DATA_LENGTH][9];
 int timestamps[DATA_LENGTH];
@@ -123,6 +125,7 @@ public:
     int e_hist[PID_LENGTH];
     int t_hist[PID_LENGTH];
     int motor_hist[PID_LENGTH];
+    int target_hist[PID_LENGTH][2];
 
 
     int e_pos;
@@ -135,16 +138,27 @@ public:
     float SKI = 0.003;
     float SKD = 0.016;
 
+    float OKP = 0.06;
+    float OKI = 0.003;
+    float OKD = 0.016;
+
 
     //extrapolation values
     float slope = -5640;
     int last_tof = 0;
 
+    //IMU
+    volatile double yaw = 0;
+
+    //targets
+    int dist_target = 304; //304 mm
+    int orient_target = 90; //90 degrees
+
 
 };
 
 Car mycar;
-#define TARGET 304
+
 
 #define MOTORLF 3
 #define MOTORLB 14
@@ -257,6 +271,10 @@ handle_command()
                 tx_estring_value.append(mycar.motor_hist[i]);
                 tx_estring_value.append("Time:");
                 tx_estring_value.append(mycar.t_hist[i]);
+                tx_estring_value.append("dist:");
+                tx_estring_value.append(mycar.target_hist[i][0]);
+                tx_estring_value.append("ang:");
+                tx_estring_value.append(mycar.target_hist[i][1]);
                 tx_characteristic_string.writeValue(tx_estring_value.c_str());
           }
           break;
@@ -288,6 +306,40 @@ handle_command()
           mycar.e_pos = 0;
           break;
         }
+        case SET_OPID:
+        {
+            float P, I, D;
+
+            success = robot_cmd.get_next_value(P);
+            if (!success)
+              return;
+
+            success = robot_cmd.get_next_value(I);
+            if (!success)
+              return;
+
+            success = robot_cmd.get_next_value(D);
+            if (!success)
+                return;
+            mycar.OKP = P;
+            mycar.OKI = I;
+            mycar.OKD = D;
+            break;
+        }
+        case SET_TARGET:
+        {
+          float dist_targ, orient_targ;
+          success = robot_cmd.get_next_value(dist_targ);
+          if (!success)
+            return;
+
+          success = robot_cmd.get_next_value(orient_targ);
+          if (!success)
+            return;
+          mycar.dist_target = int(dist_targ);
+          mycar.orient_target = double(orient_targ);
+          break;
+        }
         default:
             Serial.print("Invalid Command Type: ");
             Serial.println(cmd_type);
@@ -300,13 +352,17 @@ int sign(int x) {
 }
 
 
-float calc_pid(int dist, int setpoint, float KP = mycar.SKP, float KI = mycar.SKI, float KD = mycar.SKD, float alpha = 0.9) {
+float calc_pid(int dist, int setpoint, float KP = mycar.SKP, float KI = mycar.SKI, float KD = mycar.SKD, float alpha = 0.1) {
 
   //proportional terms
   int e = dist-setpoint;
   mycar.e_hist[mycar.e_pos] = e;
   mycar.t_hist[mycar.e_pos] = millis();
+  //mycar.target_hist[mycar.e_pos][0] = mycar.dist_target;
+  mycar.target_hist[mycar.e_pos][1] = mycar.orient_target;
   mycar.e_pos ++;
+
+  Serial.println(mycar.dt);
 
   mycar.I += e * float(mycar.dt)/1000; // integral term
   if(mycar.I > 1000) {
@@ -334,10 +390,12 @@ float calc_pid(int dist, int setpoint, float KP = mycar.SKP, float KI = mycar.SK
   if (mycar.e_pos > 1) {
 
     float d = (mycar.e_hist[mycar.e_pos-1] - mycar.e_hist[mycar.e_pos-2]) / (float(mycar.dt)/1000);
+    
     //Serial.println(mycar.e_hist[mycar.e_pos-1]);
     //Serial.println(mycar.e_hist[mycar.e_pos-2]);
     //Serial.println(mycar.dt/1000);
     mycar.dF = d*alpha + (1-alpha)* mycar.dF;
+    mycar.target_hist[mycar.e_pos][0] = mycar.dF;
   }
   else {
     mycar.dF = 0;
@@ -358,14 +416,14 @@ void drivefb(int value) {
       analogWrite(MOTORLB, 0);
       analogWrite(MOTORRB, 0);
       mycar.deadtime = millis();
-      Serial.println("Deadband Start");
+      //Serial.println("Deadband Start");
     }
     else if(millis()-mycar.deadtime > 30) {
       analogWrite(MOTORLF, value);
       analogWrite(MOTORRF, value*adjust);
       analogWrite(MOTORLB, 0);
       analogWrite(MOTORRB, 0);
-      Serial.println("Deadband End");
+      //Serial.println("Deadband End");
     }
   }
   else {
@@ -381,6 +439,50 @@ void drivefb(int value) {
       analogWrite(MOTORRB, -1*value*adjust);
       analogWrite(MOTORLF, 0);
       analogWrite(MOTORRF, 0);
+    }
+  }
+
+  mycar.last_drive = value;
+}
+
+void driveturn(int value) {
+
+
+  if (value > 0) {
+    //startup to avoid deadband
+    if(sign(mycar.last_drive) != sign(value) && value < 130) {
+      analogWrite(MOTORLF, 140);
+      analogWrite(MOTORRB, 140*adjust);
+      analogWrite(MOTORLB, 0);
+      analogWrite(MOTORRF, 0);
+      mycar.deadtime = millis();
+      //Serial.println("Deadband Start");
+      mycar.motor_hist[mycar.e_pos-1] = 140;
+    }
+    else if(millis()-mycar.deadtime > 30) {
+      analogWrite(MOTORLF, value);
+      analogWrite(MOTORRB, value*adjust);
+      analogWrite(MOTORLB, 0);
+      analogWrite(MOTORRF, 0);
+      //Serial.println("Deadband End");
+      mycar.motor_hist[mycar.e_pos-1] = value;
+    }
+  }
+  else {
+    if(sign(mycar.last_drive) != sign(value) && value > -130) {
+      analogWrite(MOTORLB, 140);
+      analogWrite(MOTORRF, 140*adjust);
+      analogWrite(MOTORLF, 0);
+      analogWrite(MOTORRB, 0);
+      mycar.deadtime = millis();
+      mycar.motor_hist[mycar.e_pos-1] = 140;
+    }
+    else if(millis()-mycar.deadtime > 30) {
+      analogWrite(MOTORLB, -1*value);
+      analogWrite(MOTORRF, -1*value*adjust);
+      analogWrite(MOTORLF, 0);
+      analogWrite(MOTORRB, 0);
+      mycar.motor_hist[mycar.e_pos-1] = value;
     }
   }
 
@@ -649,8 +751,9 @@ void get_DMP() {
           double t3 = +2.0 * (qw * qz + qx * qy);
           double t4 = +1.0 - 2.0 * (qy * qy + qz * qz);
           double yaw = atan2(t3, t4) * 180.0 / PI;
-          Serial.print("  Yaw: ");
-          Serial.println(yaw);
+          mycar.yaw = yaw;
+          //Serial.print("  Yaw: ");
+          //Serial.println(yaw);
 
       }
   }
@@ -725,34 +828,57 @@ void loop()
 
   mycar.dt = millis() - mycar.last_time;
   mycar.last_time = millis();
+
+  myICM.readDMPdataFromFIFO(&data);
   
-  if(mycar.driving) {
+  if(mycar.driving || mycar.orient) {
     //set for one foot
     if(millis() - mycar.start_time < 20000) {
       //Serial.println(millis() - mycar.start_time);
       //Serial.println(mycar.fronttof);
-      float pid = calc_pid(mycar.fronttof, TARGET);
-      //if(abs(mycar.e_hist[mycar.e_pos-1]) > 5) {
-        //Serial.println(mycar.e_hist[mycar.e_pos-1]);
-        //int anval = (int)(pid/3000 * 166); //166 is max speed, as 166 * 1.52 scaling = 255 
-        int anval = pid;
-        if(anval > 166) {
-          anval = 166;
-        } 
-        else if(anval < -166) {
-          anval = -166;
+      float pid;
+      if(mycar.driving) {
+        pid = calc_pid(mycar.fronttof, mycar.dist_target);
+      }
+      else {
+        get_DMP();
+        if(!isnan(mycar.yaw)) { //Cover DMP returning nan on start
+          pid = calc_pid(mycar.yaw, mycar.orient_target, mycar.OKP, mycar.OKI, mycar.OKD);
         }
-        else if (anval > 0 && anval < 50) {
+      }
+      //if(abs(mycar.e_hist[mycar.e_pos-1]) > 5) {
+      //Serial.println(mycar.e_hist[mycar.e_pos-1]);
+      //int anval = (int)(pid/3000 * 166); //166 is max speed, as 166 * 1.52 scaling = 255 
+      int anval = pid;
+      if(anval > 166) {
+        anval = 166;
+      } 
+      else if(anval < -166) {
+        anval = -166;
+      }
+      
+      if(mycar.driving){
+        if (anval > 0 && anval < 50) {
           anval = 50;
         }
         else if (anval < 0 && anval > -50) {
           anval = -50;
         }
-
-
         drivefb(anval);
-        Serial.println(anval);
-        mycar.motor_hist[mycar.e_pos-1] = anval;
+      }
+
+      if(mycar.orient) {
+        if (anval > 0 && anval < 110) {
+          anval = 110;
+        }
+        else if (anval < 0 && anval > -110) {
+          anval = -110;
+        }
+        driveturn(anval);
+      }
+
+      //Serial.println(anval);
+      //mycar.motor_hist[mycar.e_pos-1] = anval;
         //transmit histor
 
         //Serial.print("PID value: ");
@@ -760,7 +886,7 @@ void loop()
         //Serial.print("Drive value: ");
         //Serial.println(anval);
       //}
-      if (mycar.e_pos > 25) {
+      /*if (mycar.e_pos > 25) {
         //Serial.println("E stop")
         float sum = 0;
         for (int j =1; j < 26; j++) {
@@ -769,9 +895,10 @@ void loop()
         sum = sum/25;
         if(abs(sum) < 0.5){
           mycar.driving = 0;
+          mycar.orient = 0;
           stopmotor();
         }
-      }
+      }*/
       
     }
     else {
@@ -817,10 +944,7 @@ void loop()
     //printAccRollPitch(myICM);
   }*/
 
-  myICM.readDMPdataFromFIFO(&data);
-  if(mycar.orient) {
-    get_DMP();
-  }
+
 
 
 }
