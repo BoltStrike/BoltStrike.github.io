@@ -129,7 +129,7 @@
             </p>
 
             <h3><Strong>Lab:</Strong></h3>
-            <h4><Strong>Digital Motion Processor - yaw:</Strong></h4>
+            <h4><Strong>Digital Motion Processor - Yaw:</Strong></h4>
 
             <p>
                 The yaw calculated in Lab 2 was an integral of the gyroscope measurements, with the line <code>yaw_g = yaw_g + myICM.gyrZ()*dt;</code>
@@ -180,7 +180,7 @@
                 this application, as the car will never spin that fast in one second. I set this to the max of 2000 with the line <code> success &= (IMU.enableDMPSensor(INV_ICM20948_SENSOR_GAME_ROTATION_VECTOR) == ICM_20948_Stat_Ok);</code>
                 The sampling speed of the IMU could also hypothetically be a limit, but in this instance it samples at 1.1 KHz, which was plenty for 
                 this use case. The PID loop running with DMP and the new orientation code runs at 13 ms per loop on average, although there was some variance, 
-                likely from when TOF data is collected.
+                likely from when TOF data is collected. Whatever angle the IMU is at when it is initialized is considered 0 degrees by the DMP.
             </p>
             <h4><Strong>PID Control:</Strong></h4>
             <p>
@@ -236,11 +236,13 @@
                 </pre>
             </code>
             <p>
-                A new function for turning the car was added. This ran the motors in opposite directions to have the car spin in place. In order to overcome 
+                A new function for turning the car was added to allow differential drive. This ran the motors in opposite directions to have the car spin in place. In order to overcome 
                 static friction, a value of 140 PWM is written for 30 ms, before allowing the speed to drop down to the actual value. The value passed into 
-                this drive was clipped between 166 and 110, with 110 being the slowest it could turn and 166 times the scaling being the max value.
+                this drive was clipped between 166 and 110, with 110 being the slowest it could turn and 166 times the scaling being the max value. All future 
+                graphs of motor value show the calculated motor speed from PID, not the adjusted one for the sceond motor.
             </p>
             <code>
+                <pre>
                 if (value > 0) {
                     //startup to avoid deadband
                     if(sign(mycar.last_drive) != sign(value) && value < 130) {
@@ -277,14 +279,43 @@
                 
                   mycar.last_drive = value;
                 }
+            </pre>
             </code>
             <p>
-                To calibrate the constants, I started with a KP of 0.55, and KI and KD at 0. I found that a KP value of 0.07 worked quite nicely,
-                producing the following video:
+                To calibrate the constants, I started with KP, keeping KI and KD at 0. Since I want the full speed of 166 when the error was 180 degrees, 
+                KP was calculated to be 166/180 degrees as a starting value, or 0.9222. After experimenting with several other values, 
+                I found that a KP value of 0.9 worked the best,
+                producing the following video when the target was set to 90 degrees:
             </p>
-
+            <div class="centered">
+                <video width="640" height="480" controls>
+                    <source src="/images/lab6/P.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
             <p>
-                The graphs of the angle of the car, the target, and the motor control is shown below:
+                Duct tape was added to the wheels to help the car turn in place smoother.
+                The graphs of the angle of the car, the set targetpoint, and the motor control is shown below:
+            </p>
+            <div class = "centered">
+                <div class = "row">
+                    <div class = "column">
+                        <img src="/images/lab6/pyaw.png" alt="D Error" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab6/ptarg.png" alt="D TOF" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab6/pmotor.png" alt="D Motor control" class="responsive-img">
+                    </div>
+                </div>
+                <p>
+                    P Control Yaw (degrees), Target Angle (degrees), and Motor Output
+                </p>
+            </div>
+            <p>
+                These images reflect how the robot oscillated around the target point of 90 before stopping. The motor output shows how the output could be 
+                put up to 140 or -140 to overcome static friction, and how it has a deadband of 110 and -110.
             </p>
 
             <h4><Strong>Derivative:</Strong></h4>
@@ -292,14 +323,65 @@
                 The derivative term for the orientation control is interesting, as the proportional term is the integral of angular velocity. Thus, 
                 the derivative is close to calculating the angular velocity by undoing the integral. However, it is different since it is the
                 derivative of the error between the current location and desired location, meaning it gives the rate of change of error. This is useful for 
-                helping to prevent overshoot and help it react to changing a setpoint. By testing KD with KI at 0 and KP at 0.07, I lowered it from 0.016 
-                until the system was stable, getting a value of 
+                helping to prevent overshoot and help it react to changing a setpoint. By testing KD with KI at 0 and KP at 0, I lowered it from 0.016 
+                until the system was stable, getting a value of 0.008. 
             </p>
             <p>
-                Since the setpoint can be changed, derivative kick is an issue. This is when changing the setpoint caused the derivative term to spike due to a 
-                large change in error, shown below.
+                To test whether this actually helped with overshoot, I set my setpoint to -180 so the motors would speed up more. This also tested if 
+                the KP was well calibrated, and would cause a control of 166 when 180 degrees away. One issue is that the DMP can return negative or positive
+                yaws. This means that the controller can wrap around from -180 to positive 180. If this happens, the current controller spins a full circle to get 
+                back to -180. The PID loop was made to always take the most optimal route to a target angle by ensuring the error term is always between -180 and 180, 
+                seen below:
             </p>
-            <div class = "centered"></div>
+            <code>
+                <pre>
+                    if(mode == 1) { //Check in orientation mode
+                        if(e > 180) { //indicates its better to go around the other way
+                            e -= 360;
+                        } else if(e < -180) {
+                            e += 360;
+                        }
+                    }
+                </pre>
+            </code>
+            <p>
+                The following video demonstrates that the car can now move to the -180 degree target and stabilize there with PD control.
+            </p>
+            <div class="centered">
+                <video width="640" height="480" controls>
+                    <source src="/images/lab6/D.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+            <p>
+                The following are the graphs from this run:
+            </p>
+            <div class = "centered">
+                <div class = "row">
+                    <div class = "column">
+                        <img src="/images/lab6/dyaw.png" alt="D Error" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab6/dtarg.png" alt="D TOF" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab6/dmotor.png" alt="D Motor control" class="responsive-img">
+                    </div>
+                </div>
+                <p>
+                    PD Control Yaw (degrees), Target Angle (degrees), and Motor Output
+                </p>
+            </div>
+            <p>
+                Notably, the overshoot for the yaw is minimized by the derivative term and the oscillations are relatively small. The motor control 
+                also shows that KP is large enough to build up the motor speed when it is 180 degrees from the target.
+            </p>
+
+            <p>
+                Since the setpoint can be changed, derivative kick is an issue. This is when changing the setpoint caused the derivative term to spike due to a 
+                large change in error, which will cause the motor driver to be run at a very high speed right when the swap occurs. This is shown below.
+            </p>
+            <div class = "centered">
                 <div class = "row">
                     <div class = "column">
                         <img src="/images/lab6/kick.png" alt="Derivative Kick" class="responsive-img">
@@ -309,7 +391,7 @@
                     </div>
                 </div>
                 <p>
-                    Derivative term and Set point shift
+                    Derivative kick and Set point shift
                 </p>
             </div>
             <p>
@@ -322,21 +404,125 @@
                 </pre>
             </code>
             <p>
-                The term alpha determines how much low pass filter passes, with a low alpha blocking most high frequencies by heavily weighting past dFs. An alpha of 0.q was chosen as it 
-                gave the best performance.
+                The term alpha determines how much low pass filter passes, with a low alpha blocking most high frequencies by heavily weighting past dFs. An alpha of 0.002 was chosen as it 
+                gave the best performance, eliminating most of the magnitude of the spike while still allowing the derivative term to change at a reasonable rate.
             </p>
+            <div class = "centered">
+                <div class = "row">
+                    <div class = "column">
+                        <img src="/images/lab6/kickless.png" alt="Derivative Kick" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab6/setkickless.png" alt="Setpoint change" class="responsive-img">
+                    </div>
+                </div>
+                <p>
+                    Derivative lowpass and Set point shift
+                </p>
+            </div>
+
             <h4><Strong>Integral:</Strong></h4>
             <p>
-                The integral term was then implemented to help with steady state error, which could be caused by differing surfaces. By starting with it at 0.003,
-                I then lowered it until the car stayed performant.
+                The integral term was then implemented to help with steady state error, which could be caused by differing surfaces. In order to properly test it,
+                I put my car on an uneven surface, being my backpack. Without any integral term, the below is the following performance:
+            </p>
+            <div class="centered">
+                <video width="640" height="480" controls>
+                    <source src="/images/lab6/noi.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+            <p>
+                The proportional control term and derivative term are not forcing the motors to high enough speeds to actually turn on this uneven surface.
+                I tested several values both against this surface and the ground to make sure the I value wasn't too high, finding a value of 0.1 to be the best 
+                performing, seen below on the backpack.
+            </p>
+            <div class="centered">
+                <video width="640" height="480" controls>
+                    <source src="/images/lab6/I.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+            <p>
+                The integral winds up enough to finish the turn, producing the following graphs:
+            </p>
+            <div class = "centered">
+                <div class = "row">
+                    <div class = "column">
+                        <img src="/images/lab6/iyaw.png" alt="D Error" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab6/itarg.png" alt="D TOF" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab6/imotor.png" alt="D Motor control" class="responsive-img">
+                    </div>
+                </div>
+                <p>
+                    PID Control Yaw (degrees), Target Angle (degrees), and Motor Output
+                </p>
+            </div>
+            <p>
+                The motor control shows how the integral term winds up overtime to force the car to move, while dropping once the car overcomes 
+                whatever obstacle.
+            </p>
+
+            <h4><Strong>Changing Setpoint:</Strong></h4>
+            <p>
+                With the PID controller done, the last step was to test how it behaved when the set point was changed mid run. I had it start at a setpoint of 
+                90 and swap to -90 to demonstrate that the car could react and converge on the second set point.
+            </p>
+            <div class="centered">
+                <video width="640" height="480" controls>
+                    <source src="/images/lab6/set.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+            <p>
+                This video shows that the car can in fact change the setpoint in live time and react, reaching and oscillating around both setpoints.
+                One note is there was a decent amount of overshoot and it oscillated more instead of converging. This was due to the earlier calibration being 
+                done on carpet, and the lower friction of the smooth floor with the tape making the car slide more. Without the tape or with different calibration 
+                this could be reduced. The graphs for this run are below.
+            </p>
+            <div class = "centered">
+                <div class = "row">
+                    <div class = "column">
+                        <img src="/images/lab6/setyaw.png" alt="D Error" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab6/settarg.png" alt="D TOF" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab6/setmotor.png" alt="D Motor control" class="responsive-img">
+                    </div>
+                </div>
+                <p>
+                    PID Control with Setpoint Change Yaw (degrees), Target Angle (degrees), and Motor Output
+                </p>
+            </div>
+            <p>
+                When the setpoint changes, the car immediately reacts and starts turning, with the yaw dropping quite quickly from 90 down to negative values, 
+                greatly overshooting the -90 target. It then corrects and oscillates around -90 degrees. This is consistent with the motor waveforms, which 
+                lowers the control to -166 when the setpoint changes, before slowing down.
             </p>
 
             <h4><Strong>5000 Level Task:</Strong></h4>
             <p>
                 Like Lab 5, having an integrator term can lead to integrator windup, where the integral term grows too high due to the error not changing and 
-                then can not drop fast enough once it is moving. One instance this can occur is on different surfaces. This can be prevented by clamping 
-                the integrator term. A number has to be chosen that is high enough to allow the integral to overcome steady state error but low enough 
-                to not have windup. I chose a value of 
+                then can not drop fast enough once it is moving. One instance this can occur is on different surfaces. The following video simulates integrator 
+                windup by having the car stuck on the backpack, and then move to a smooth floor:
+            </p>
+            <div class="centered">
+                <video width="640" height="480" controls>
+                    <source src="/images/lab6/windup.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+            <p>
+                The integral term wound up too high and couldn't drop quick enough, 
+                so the car kept spinning the same direction. This can be prevented by clamping the integrator term. 
+                Like lab 5, 1000 is chosen as it is high enough to allow the integral to overcome steady state error but low enough 
+                to not have windup.
             </p>
             <code>
                 <pre>
@@ -348,6 +534,16 @@
                       }
                 </pre>
             </code>
+            <p>
+                The following video shows the same situation with the integral windup clamping.
+            </p>
+            <div class="centered">
+                <video width="640" height="480" controls>
+                    <source src="/images/lab6/nowindup.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+
 
 
             <h4><Strong>References</Strong></h4>
