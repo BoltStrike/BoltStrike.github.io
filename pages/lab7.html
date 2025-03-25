@@ -1,0 +1,456 @@
+
+<!-- Page Content  -->
+<link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="../css/style.css">
+
+<div class="wrapper d-flex align-items-stretch">
+    <div id="sidebar-container"></div>
+    <div class="stacked">
+        <div id="content" class="p-4 p-md-5 pt-5">
+            <h1 class="mb-4"><strong>Lab 7 - Kalman Filter </strong></h1>
+            <p>
+                Lab 7 implements a Kalman Filter in order to estimate where the car is at in 
+                between the slower TOF readings, replacing the linear extrapolation from Lab 5.
+            </p>
+
+            <h3><Strong>Lab:</Strong></h3>
+            <h4><Strong>The Kalman Filter</Strong></h4>
+
+            <p>
+                A Kalman filter consists of two primary steps, being a prediction step and then an 
+                update step. The prediction step uses the state space model to estimate what value the 
+                TOF would be at, while the update step uses a new TOF reading to update the state space model.
+                The following pseudocode from Lecture 13 shows this split.
+            </p>
+            <div class = "centered">
+                <img src="/images/lab7/pseudocode.png" alt="Psuedocode" class="responsive-img">
+            </div>
+            <p>
+                The state space for the car is a 2D vector of position and velocity, represented 
+                by mu in the above image. The next position and velocity are then predicted using the matrices
+                A and B.
+            </p>
+            <h4><Strong>Drag and Momentum</Strong></h4>
+            <p>
+                The matrics A and B are shown in the below image from lecture 13, multiplied by
+                [X, Xdot] and u respectively:
+            </p>
+            <div class = "centered">
+                <img src="/images/lab7/model.png" alt="State space model" class="responsive-img">
+            </div>
+            <p>
+                In order to create A and B, the drag and momentum of the system need to be solved 
+                for. This is done by having the car reach a steady speed and finding the velocity for 
+                a given step size u. I chose to run my car at a analog value of 125, which is 75% of the 
+                max value 166 I can run (accounting for scaling the wheels to go straight). I ran the car 
+                straight at the wall and stopped once it was in a meter as to not crash. This gave the following 
+                TOF graph and motor control:
+            </p>
+            <div class = "centered">
+                <div class = "row">
+                    <div class = "column">
+                        <img src="/images/lab7/straight.png" alt="Straight line TOF" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab7/strmotor.png" alt="Straight motor graph" class="responsive-img">
+                    </div>
+                </div>
+                <p>
+                    Steady Speed TOF and motor readings
+                </p>
+            </div>
+            <p>
+                There is a bit of noise at the beginning due to other objects near the wall being seen,
+                but it ends up reaching full speed and approaching the wall at a constant velocity before 
+                stopping. When trying to calculate velocity, I took the difference between each TOF measurement 
+                and divided this by the difference in timestamps. However, this resulted in incredibly noisy 
+                velocity data, due to the dt varying a lot. Instead to get velocity, I fit a exponential decay 
+                model to the TOF data.
+            </p>
+            <div class = "centered">
+                <img src="/images/lab7/exp.png" alt="Exponential Decay" class="responsive-img">
+            </div>
+            <p>
+                While not a perfect fit, it approximates the steady state speed decently. The velocity for this 
+                is below:
+            </p>
+            <div class = "centered">
+                <img src="/images/lab7/expvel.png" alt="Exponential Decay Velocity" class="responsive-img">
+            </div>
+            <p>
+                This graph displays the max velocity to be at -2.89 m/s. However, this method gave no way 
+                to find 90% of the rise time to the max speed, and I also felt it could still fit better.
+                I instead wrote code to fit a series of line segments to the TOF readings, with one line segment 
+                per 20 data points. This produced the following fit:
+            </p>
+            <div class = "centered">
+                <img src="/images/lab7/lines.png" alt="Linear fit" class="responsive-img">
+            </div>
+            <p>
+                The velocities from each of these line segments are displayed below:
+            </p>
+            <div class = "centered">
+                <img src="/images/lab7/linevels.png" alt="Linear fit" class="responsive-img">
+            </div>
+            <p>
+                Every 20 data points helped eliminate a lot of the noise while still having enough 
+                granularity to determine the top speed. With this, the top speed was found to be -3.16 m/s.
+                90% of the this top speed is -2.844 m/s, which takes a rise time of 1639 milliseconds. Note 
+                that speeds were negative due to the distance to the wall shrinking.
+            </p>
+            <p>
+                With the steady state velocity, the drag can be calculated. This is the step response u over the 
+                velocity. I treat 125 analog write as a step response of 1, so the drag is 1/3.16, or 0.3163. The 
+                equation for momentum is shown below:
+            </p>
+            <div class = "centered">
+                <img src="/images/lab7/mom.png" alt="Momentum" >
+            </div>
+            <p>
+                This plugs in to be -0.3163*1.604/ln(0.1), or 0.2093. Both the Drag and momentum 
+                are later scaled down by 1000 to match the TOF mm input, giving d = 0.0003163 and 
+                m = 0.0002093. These can then be plugged in to solve for the A and B matrices.
+            </p>
+            <div class = "centered">
+                <img src="/images/lab7/AB.png" alt="Momentum" >
+            </div>
+            <h4><Strong>Initializing KF</Strong></h4>
+            <p>
+                The python code for initializing these arrays is shown below:
+            </p>
+
+            <code>
+                <pre>
+                    d = .3163/1000
+                    m = .2093/1000
+                    
+                    A = np.array([[0,1],[0,-d/m]])
+                    B = np.array([[0],[1/m]])
+                               
+                    dt = []
+                    summing = 0
+                    for i in range(len(testtof)-1):
+                        dt =  (testtof[i+1] - testtof[i])/1000
+                        summing = summing+dt
+                    Delt_T = summing/len(testtof)
+                    
+                    Ad = np.eye(2) + Delt_T*A
+                    Bd = Delt_T*B
+                    C = np.array([[1,0]])
+                </pre>
+            </code>
+            <p>
+                This initializes the A, B, and C matrices. Additionally, it calculates the 
+                average timestep between each TOF reading and uses that to discretize A and B. This is 
+                done following the discretization method from lecture. I used a PID run using the Lab5 code 
+                for my TOF data, which had an average Delt_T of 8 milliseconds. Ad and Bd are below:
+            </p>
+            <div class = "centered">
+                <img src="/images/lab7/ABD.png" alt="Momentum" >
+            </div>
+            <p>
+                My C matrix ended up being [[1,0]] as the distance from the wall is positive. I also 
+                initalized my state space matrix as <code>x = np.array([[tof_arr1[0]], [0]])</code>,
+                starting at the first TOF reading for position and 0 for velocity as the car is 
+                presumably not moving.
+            </p>
+            <p>
+                Next, process and sensor noise covariance matrices needed to be created. The 
+                process noise, sig_u, specifies how much the Kalman filter states should be trusted,
+                while the sensor noise, sig_z, indicates how much the TOF sensor should be trusted.
+                Sigma_z is composed of the value Sigma_3 squared. I chose this to be a value of 20 mm to 
+                start, as the TOF sensor datasheet specifies it has precision of +/- 20 mm in the dark.
+            </p>
+            <p>
+                Sigma_u is broken into two pieces, Sigma_1 and Sigma_2. Sigma_1 is how much the position 
+                state of our state model is mistrusted, and Sigma_2 is how much the velocity is not trusted.
+                Sigma_1 is initalized to 15mm of mistrust, scaled by the delta_T, and Sigma_2 is 15 mm/s. These
+                values will likely have to change as the Kalman filter's performance is observed.
+            </p>
+            <code>
+                <pre>
+                    sigma_3 = 0.02 #plus or minus 20 mm data
+                    sigma_1 = np.sqrt(0.015**2*1/Delt_T)
+                    sigma_2 = np.sqrt(0.015**2*1/Delt_T)
+
+                    sig_u=np.array([[sigma_1**2,0],[0,sigma_2**2]]) #We assume uncorrelated noise, and therefore a diagonal matrix works.
+                    sig_z=np.array([[sigma_3**2]])
+                </pre>
+            </code>
+            <p>
+                This results in the following matrices:
+            </p>
+            <div class = "centered">
+                <img src="/images/lab7/initsig.png" alt="Initial Sigma values" >
+            </div>
+            <p>
+                Additionally, an initial sigma array for the KF is initialized with values of 20mm and 5mm/s,
+                as there should be less uncertainty in velocity due to it starting from stop.
+            </p>
+
+            <h4><Strong>Kalman Filter in Python</Strong></h4>
+            <p>
+                In order to simulate the Kalman filter in Python, I used a PID run using the lab 5 code. 
+                The TOF readings and PWM commands to the motor are below: 
+            </p>
+            <div class = "centered">
+                <div class = "row">
+                    <div class = "column">
+                        <img src="/images/lab7/PID.png" alt="PID TOF" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab7/PWM.png" alt="PID Motor Graph" class="responsive-img">
+                    </div>
+                </div>
+                <p>
+                    Trial run TOF and PWM
+                </p>
+            </div>
+            <p>
+                I then implemented the Kalman filter, mostly copying the code from the write up.
+            </p>
+
+            <code>
+                <pre>
+                    def kf(mu,sigma,u,y,newread): #always do both steps form moment
+    
+                        mu_p = Ad.dot(mu) + Bd.dot(u) 
+                        sigma_p = Ad.dot(sigma.dot(Ad.transpose())) + sig_u
+                        
+                        if(newread == 1):
+                            sigma_m = C.dot(sigma_p.dot(C.transpose())) + sig_z
+                            kkf_gain = sigma_p.dot(C.transpose().dot(np.linalg.inv(sigma_m)))
+                            y_m = y-C.dot(mu_p)
+                            mu = mu_p + kkf_gain.dot(y_m)    
+                            sigma=(np.eye(2)-kkf_gain.dot(C)).dot(sigma_p)
+                        else:
+                            mu = mu_p
+                            sigma = sigma_p
+
+                        return mu,sigma
+                </pre>
+            </code>
+            <p>
+                I added code to split the prediction and update step based on whether a new value was read.
+                Next, I iterated through my data to call this Kalman Filter:
+            </p>
+            <code>
+                <pre>
+                    i = tofstamps[0]
+                    j = 0
+                    tofrange = tofstamps[len(tofstamps)-1]
+                    while(i <= tofrange):
+
+                        KF_time.append(float(i))
+                        i = i + Delt_T*1000
+                        x, sigma = kf(x, sigma, -(motor[j])/125, tof_arr1[j], newread)
+                        KF_dist.append(x[0][0])
+                        if(tofstamps[j+1] <= i):
+                            j = j+1
+                            newread = 1
+
+                        else:
+                            newread = 0
+                </pre>
+            </code>
+            <p>
+                I divided each motor input by 125 to make sure the step response was scaled properly,
+                as I determined earlier 125 to be my step response of 1. The following shows my first result 
+                with this filter.
+            </p>
+            <div class = "centered">
+                <img src="/images/lab7/first_filt.png" alt="First filter" class="responsive-img">
+            </div>
+            <p>
+                This run had the Kalman filter match the curve well when on the update steps, but ultimately 
+                performed poorly when making predictions. What I discovered was that this was the result of the 
+                PID run being on carpet, while the calibrations I did for drag and momentum were on tile. This 
+                demonstates that by overestimating the momentum, the model is unable to overcome this larger momentum 
+                and constantly assumes the car will go further than it does. Taking a tile PID run gets this filter
+            </p>
+            <div class = "centered">
+                <img src="/images/lab7/filt2.png" alt="Second filter" class="responsive-img">
+            </div>
+            <p>
+                While better, there is still some jagged edges. Zooming in to the curve helps show why
+            </p>
+            <div class = "centered">
+                <img src="/images/lab7/zoom1.png" alt="Zoom filter" class="responsive-img">
+            </div>
+            <p>
+                When rapidly changing directions, the filter is slow to adjust. This ended up being due 
+                to the model being trusted too little, so the model's changing velocity and position would be ignored. By reducing Sigma_1 to 0.0045 instead of 0.02 and 
+                Sigma_2 to 0.01 instead of 0.02, I made the kalman filter much more responsive and smooth.
+            </p>
+            <div class = "centered">
+                <img src="/images/lab7/zoom3.png" alt="Zoom filter" class="responsive-img">
+            </div>
+            <p>
+                As an interesting comparison, when I made both Sigma_1 and Sigma_2 significantly smaller (0.0001), the model started to 
+                behave almost the same as if it was to extrapolate values, with the Kalman Filter predicting along 
+                a line between the last two points.
+            </p>
+            <div class = "centered">
+                <img src="/images/lab7/zoom4.png" alt="Zoom filter" class="responsive-img">
+            </div>
+            <p>
+                I also messed around with various other parameters to see how they impact the filter.
+                The starting mu and sigma only really impacted how close the filter was to the 
+                initial few readings, with bad starting mu and sigmas still eventually approximating the line.
+                Raising the sensor noise uncertainty by increasing Sigma 3 was interesting, as the filter would 
+                still follow the general shape of the curve, but would be offset on the y axis.
+            </p>
+            <p>
+                After all of this, I ended up getting the following graph, which functioned very well, with only a small spike when 
+                it abruptly stopped.
+            </p>
+            <div class = "centered">
+                <img src="/images/lab7/endsim.png" alt="Zoom filter" class="responsive-img">
+            </div>
+
+            <h4><Strong>Kalman Filter on Robot</Strong></h4>
+            <p>
+                To implement the filter on the robot, I leveraged the Basic Linear Algebra 
+                library from Arduino, which simplifies matrix operations. I then initialized 
+                the necessary matrices in my car object for use.
+            </p>
+            <code>
+                <pre>
+                    Matrix<2,2> A = {0, 1,
+                                     0, -1.51122};
+                    Matrix<2,1> B = {0,
+                                    4777.83};
+                    Matrix<1,2> C = {1,
+                                    0};
+                    Matrix<2,2> sig_u = {0.0025, 0,
+                                        0, 0.00213};
+                    Matrix<1> sig_z = {.0001};
+                
+                    Matrix<2,1> mu = {-5160, 0};
+                    Matrix<2,2> sigma = {40, 0,
+                                        0, 25};
+                </pre>
+            </code>
+            <p>
+                I then implemented the kalman filter function itself using these matrices.
+            </p>
+            <code>
+                <pre>
+                    float kalman(float u, int y, bool newTOF) {
+                        //Dynamically calculate Ad and Bd
+                        float scaledt = ((float)mycar.dt)/1000.0;
+                        Matrix<2,2> id = {1,0,
+                                          0,1};
+                        Matrix<2,2> Ad = id + scaledt*mycar.A;
+                        Matrix<2,1> Bd = scaledt*mycar.B;
+
+                        //Get in matrix format for calculations
+                        Matrix<1> au = {u}; //step size
+                        Matrix<1> ay = {(float)y}; //tof
+                      
+                        //Prediction
+                        Matrix<2,1> mu_p = Ad*mycar.mu+Bd*au;
+                        Matrix<2,2> sigma_p = Ad*(mycar.sigma*~Ad) + mycar.sig_u;
+                        mycar.mu = mu_p;
+                        mycar.sigma = sigma_p;
+                        if(newTOF) { //update
+                          Matrix<1> sigma_m = mycar.C*(sigma_p*~mycar.C) + mycar.sig_z;
+                          Matrix<2,1> kkf_gain = sigma_p*(~mycar.C*Inverse(sigma_m));
+                      
+                          Matrix<1> y_m = ay-mycar.C*mu_p;
+                          mycar.mu = mu_p+kkf_gain*y_m;
+                          mycar.sigma = (id-kkf_gain*mycar.C)*sigma_p;
+        
+                        }
+                        return(mycar.mu(0,0));
+                      }
+                </pre>
+            </code>
+            <p>
+                Initially, I had hardcoded the values for Ad and Bd into the program, using the 
+                timestep of 8 milliseconds. However, I found that this timestep was too variable, specifically
+                with the addition of all the kalman filter math making it take longer, resulting in the 
+                filter consistently mispredicting. By dynamically calculating Ad and Bd for each dt, I 
+                was able to resolve this issue. I then replaced the extrapolation code I had prevously with 
+                a call to this filter, passing in false to indicate predicting. A similar call is made when a 
+                new TOF reading is made, but with true passed instead.
+            </p>
+            <code>
+                <pre>
+                    if(mycar.kalstart) {
+                        mycar.fronttof = kalman(-((float)mycar.motor_hist[mycar.e_pos-1])/125.0, mycar.last_frontof,false);
+                
+                        if(tof_iter1 < DATA_LENGTH && collecting) {
+                            tof[tof_iter1][0] = mycar.fronttof;
+                            tofstamps[tof_iter1] = millis();
+                            tof_iter1 ++;
+                        }
+                    
+                      }
+                </pre>
+            </code>
+            <p>
+                I ended up doing a bit more tuning to get the sigma values to work for the physical car,
+                dropping sigma_3 to be 10mm, meaning that the TOF sensor seemed to be more reliable than the 
+                datasheet suggested. I then ran the following PID control with the Kalman Filter:
+            </p>
+            <div class="centered">
+                <video width="640" height="480" controls>
+                    <source src="/images/lab7/Kalman.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+            <p>
+                This was successful, peforming very similarly to the interpolated PID control. The following image 
+                displays the TOF readings, including the Kalman Filter readings.
+            </p>
+            <div class = "centered">
+                <img src="/images/lab7/physkal.png" alt="Zoom filter" class="responsive-img">
+            </div>
+            <p>
+                In order to better show the effect of the Kalman filter, a zoomed in image of the curve when the 
+                car reverses is shown, with the blue dots being the raw TOF readings and the orange being the 
+                Kalman Filter predictions.
+            </p>
+            <div>
+                <img src="/images/lab7/kalmanfinal.png" alt="Zoom filter" class="responsive-img">
+            </div>
+            <p>
+                While not perfect, with the filter sometimes overshooting or undershooting, this shows that 
+                the Kalman filter was able to adapt to the sudden change in direction very well, continuing to 
+                give useful predictions. This is better than the extrapolation method, which tended to significantly 
+                overshoot when reversing directions. The next steps are to increase the speed of the filter to 
+                allow for even more accurate data to let the car run faster, and possibly to tune a bit more.
+            </p>
+
+
+            <h4><Strong>References</Strong></h4>
+            <p>
+                I worked in the lab section on this code with Giorgi Berndt and Jorge Corpa Chunga, discussing the general approach but not 
+                specific code. I referred to Mikayla Lahr's lab 7 website from last year to check that my values were within a reasonable range 
+                and for structuring this page.
+            </p>
+
+
+
+            
+    </div>
+
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/popper.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/main.js"></script>
+
+    <script>
+        fetch("sidebar.html")
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("sidebar-container").innerHTML = data;
+                document.getElementById("sidebarCollapse").addEventListener("click", function () {
+                    document.getElementById("sidebar").classList.toggle("active");
+                });
+            });
+    </script>
+</div>

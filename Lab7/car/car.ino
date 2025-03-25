@@ -1,7 +1,8 @@
 #include "ICM_20948.h" // Click here to get the library: http://librarymanager/All#SparkFun_ICM_20948_IMU
 
 //#define USE_SPI       // Uncomment this to use SPI
-
+#include <BasicLinearAlgebra.h>    //Use this library to work with matrices:
+using namespace BLA;               //This allows you to declare a matrix
 
 #include "BLECStringCharacteristic.h"
 #include "EString.h"
@@ -95,13 +96,13 @@ enum CommandTypes
 BLEDevice central;
 
 //tof and collection variables
-#define DATA_LENGTH 128
+#define DATA_LENGTH 512
 int iter = 0;
 int tof_iter1 = 0;
 int tof_iter2 = 0;
 int collecting = 0;
-float adjust = 1.52;
-#define PID_LENGTH 4096
+float adjust = 1.25;
+#define PID_LENGTH 512
 
 float imu_data[DATA_LENGTH][9];
 int timestamps[DATA_LENGTH];
@@ -151,10 +152,28 @@ public:
     volatile double yaw = 0;
 
     //targets
-    int dist_target = 1000; //304 mm
+    int dist_target = 304; //304 mm
     int orient_target = 90; //90 degrees
 
+    //Kalman filter variables
+    /*Matrix<2,2> A = {1, 0.00805859,
+                    0, 0.9878};
+    Matrix<2,1> B = {0,
+                    38.5026};*/
+    Matrix<2,2> A = {0, 1,
+                    0, -1.51122};
+    Matrix<2,1> B = {0,
+                    4777.83};
+    Matrix<1,2> C = {1,
+                    0};
+    Matrix<2,2> sig_u = {0.0025, 0,
+                          0, 0.00213};
+    Matrix<1> sig_z = {.0001};
 
+    Matrix<2,1> mu = {-5160, 0};
+    Matrix<2,2> sigma = {40, 0,
+                          0, 25};
+    bool kalstart = false;
 };
 
 Car mycar;
@@ -352,17 +371,24 @@ int sign(int x) {
 }
 
 
-float calc_pid(int dist, int setpoint, float KP = mycar.SKP, float KI = mycar.SKI, float KD = mycar.SKD, float alpha = 0.1) {
+float calc_pid(int dist, int setpoint, float KP = mycar.SKP, float KI = mycar.SKI, float KD = mycar.SKD, int mode = 0, float alpha = 0.002) {
 
   //proportional terms
   int e = dist-setpoint;
+  if(mode == 1) { 
+    if(e > 180) { //indicates its better to go around the other way
+      e -= 360;
+    } else if(e < -180) {
+      e += 360;
+    }
+  }
   mycar.e_hist[mycar.e_pos] = e;
   mycar.t_hist[mycar.e_pos] = millis();
   //mycar.target_hist[mycar.e_pos][0] = mycar.dist_target;
   mycar.target_hist[mycar.e_pos][1] = mycar.orient_target;
   mycar.e_pos ++;
 
-  Serial.println(mycar.dt);
+  //Serial.println(mycar.dt);
 
   mycar.I += e * float(mycar.dt)/1000; // integral term
   if(mycar.I > 1000) {
@@ -375,6 +401,7 @@ float calc_pid(int dist, int setpoint, float KP = mycar.SKP, float KI = mycar.SK
   //Serial.println(mycar.dt);
 
   if (mycar.e_pos >= PID_LENGTH) { 
+    /*
     mycar.e_hist[0] = mycar.e_hist[PID_LENGTH-2];
     mycar.e_hist[1] = mycar.e_hist[PID_LENGTH-1];
     mycar.t_hist[0] = mycar.t_hist[PID_LENGTH-2];
@@ -384,7 +411,10 @@ float calc_pid(int dist, int setpoint, float KP = mycar.SKP, float KI = mycar.SK
     for(int i = 2; i < PID_LENGTH; i++) {
       mycar.e_hist[i] = 0;
     }
-    mycar.e_pos = 2;
+    mycar.e_pos = 2;*/
+    stopmotor();
+    mycar.driving = 0;
+    return 0;
   }
 
   if (mycar.e_pos > 1) {
@@ -416,6 +446,7 @@ void drivefb(int value) {
       analogWrite(MOTORLB, 0);
       analogWrite(MOTORRB, 0);
       mycar.deadtime = millis();
+      mycar.motor_hist[mycar.e_pos-1] = 70;
       //Serial.println("Deadband Start");
     }
     else if(millis()-mycar.deadtime > 30) {
@@ -423,7 +454,11 @@ void drivefb(int value) {
       analogWrite(MOTORRF, value*adjust);
       analogWrite(MOTORLB, 0);
       analogWrite(MOTORRB, 0);
+      mycar.motor_hist[mycar.e_pos-1] = value;
       //Serial.println("Deadband End");
+    }
+    else {
+      mycar.motor_hist[mycar.e_pos-1] = 70;
     }
   }
   else {
@@ -433,14 +468,18 @@ void drivefb(int value) {
       analogWrite(MOTORLF, 0);
       analogWrite(MOTORRF, 0);
       mycar.deadtime = millis();
+      mycar.motor_hist[mycar.e_pos-1] = -70;
     }
     else if(millis()-mycar.deadtime > 30) {
       analogWrite(MOTORLB, -1*value);
       analogWrite(MOTORRB, -1*value*adjust);
       analogWrite(MOTORLF, 0);
       analogWrite(MOTORRF, 0);
+      mycar.motor_hist[mycar.e_pos-1] = value;
     }
-    mycar.motor_hist[mycar.e_pos-1] = 166;
+    else {
+      mycar.motor_hist[mycar.e_pos-1] = -70;
+    }
   }
 
   mycar.last_drive = value;
@@ -451,7 +490,7 @@ void driveturn(int value) {
 
   if (value > 0) {
     //startup to avoid deadband
-    if(sign(mycar.last_drive) != sign(value) && value < 130) {
+    if(sign(mycar.last_drive) != sign(value) && value < 140) {
       analogWrite(MOTORLF, 140);
       analogWrite(MOTORRB, 140*adjust);
       analogWrite(MOTORLB, 0);
@@ -468,15 +507,18 @@ void driveturn(int value) {
       //Serial.println("Deadband End");
       mycar.motor_hist[mycar.e_pos-1] = value;
     }
+    else {
+      mycar.motor_hist[mycar.e_pos-1] = 140;
+    }
   }
   else {
-    if(sign(mycar.last_drive) != sign(value) && value > -130) {
+    if(sign(mycar.last_drive) != sign(value) && value > -140) {
       analogWrite(MOTORLB, 140);
       analogWrite(MOTORRF, 140*adjust);
       analogWrite(MOTORLF, 0);
       analogWrite(MOTORRB, 0);
       mycar.deadtime = millis();
-      mycar.motor_hist[mycar.e_pos-1] = 140;
+      mycar.motor_hist[mycar.e_pos-1] = -140;
     }
     else if(millis()-mycar.deadtime > 30) {
       analogWrite(MOTORLB, -1*value);
@@ -484,6 +526,9 @@ void driveturn(int value) {
       analogWrite(MOTORLF, 0);
       analogWrite(MOTORRB, 0);
       mycar.motor_hist[mycar.e_pos-1] = value;
+    }
+    else {
+      mycar.motor_hist[mycar.e_pos-1] = -140;
     }
   }
 
@@ -668,6 +713,72 @@ read_data()
     }
 }
 
+float kalman(float u, int y, bool newTOF) {
+  //Get in matrix format for calculations
+  float scaledt = ((float)mycar.dt)/1000.0;
+  Matrix<2,2> id = {1,0,
+                    0,1};
+  Matrix<2,2> Ad = id + scaledt*mycar.A;
+  Matrix<2,1> Bd = scaledt*mycar.B;
+  Matrix<1> au = {u}; //step size
+  Matrix<1> ay = {(float)y}; //tof
+  /*if(mycar.driving) {
+    Serial.print("mu input: ");
+    Serial.println(mycar.mu(0,0));
+    Serial.print("mu vel: ");
+    Serial.println(mycar.mu(1,0));
+    Serial.print("u step: ");
+    Serial.println(au(0,0));
+    Serial.print("tof reading: ");
+    Serial.println(ay(0,0));
+  }*/
+
+  //Prediction
+  Matrix<2,1> mu_p = Ad*mycar.mu+Bd*au;
+  Matrix<2,2> sigma_p = Ad*(mycar.sigma*~Ad) + mycar.sig_u;
+  /*if(mycar.driving) {
+    Serial.print("mu p 1: ");
+    Serial.println(mu_p(0,0));
+    Serial.print("mu p 2: ");
+    Serial.println(mu_p(1,0));
+  }*/
+  mycar.mu = mu_p;
+  mycar.sigma = sigma_p;
+  if(newTOF) { //update
+    Matrix<1> sigma_m = mycar.C*(sigma_p*~mycar.C) + mycar.sig_z;
+    Matrix<2,1> kkf_gain = sigma_p*(~mycar.C*Inverse(sigma_m));
+
+    Matrix<1> y_m = ay-mycar.C*mu_p;
+    mycar.mu = mu_p+kkf_gain*y_m;
+    mycar.sigma = (id-kkf_gain*mycar.C)*sigma_p;
+    /*if(mycar.driving) {
+      Serial.print("Sigma m: ");
+      Serial.println(sigma_m(0,0));
+      Serial.print("kkf_gain 1: ");
+      Serial.println(kkf_gain(0,0));
+      Serial.print("kkf_gain 2: ");
+      Serial.println(kkf_gain(1,0));
+      Serial.print("ym: ");
+      Serial.println(y_m(0,0));
+      Serial.print("mu 1: ");
+      Serial.println(mycar.mu(0,0));
+      Serial.print("mu 2: ");
+      Serial.println(mycar.mu(1,0));
+      Serial.print("Sigma 1: ");
+      Serial.println(mycar.sigma(0,0));
+      Serial.print("Sigma 2: ");
+      Serial.println(mycar.sigma(1,0));
+      Serial.print("Sigma 3: ");
+      Serial.println(mycar.sigma(0,1));
+      Serial.print("Sigma 4: ");
+      Serial.println(mycar.sigma(1,1));
+    }*/
+
+  }
+  //Serial.println("\n\n");
+  return(mycar.mu(0,0));
+}
+
 void collect_tof() {
   //collect TOF data
 
@@ -675,10 +786,22 @@ void collect_tof() {
     //Serial.println("here");
     int new_time = millis();
     int dist = tof1.getDistance();
-    if(mycar.fronttof != -5640) {
+    /*if(mycar.fronttof != -5640) {
       float diff_time = new_time - mycar.last_tof;
       float diff_meas = dist - mycar.last_frontof;
       mycar.slope = diff_meas/diff_time;
+    }*/
+    if(mycar.mu(0,0) = -5160) {
+      mycar.mu(0,0) = dist;
+    }
+    if(mycar.driving) {
+      if(mycar.kalstart) {//normal case, use motor history
+        kalman(-(((float)mycar.motor_hist[mycar.e_pos-1])/125), dist,true); //Update the kalman filter with this data
+      }
+      else { //first time, 0 for motor
+        kalman(0, dist,true); //Update the kalman filter 
+        mycar.kalstart = true;
+      }
     }
 
     mycar.last_tof = new_time;
@@ -694,14 +817,28 @@ void collect_tof() {
       tof_iter1 ++;
     }
   }
-  else { //extrapolate tof
-    if(mycar.slope != -5640) {
+  else { 
+    //extrapolate tof
+    /*if(mycar.slope != -5640) {
       float dif_time = millis() - mycar.last_tof;
       mycar.fronttof = mycar.last_frontof + dif_time*mycar.slope;
       if(tof_iter1 < DATA_LENGTH && collecting) {
         tof[tof_iter1][0] = mycar.fronttof;
         tofstamps[tof_iter1] = millis();
         tof_iter1 ++;
+      }
+    }*/
+    if(mycar.kalstart) {
+      //Serial.print("Motor input: ");
+      //Serial.println(mycar.motor_hist[mycar.e_pos-2]);
+      if(mycar.driving){
+        mycar.fronttof = kalman(-((float)mycar.motor_hist[mycar.e_pos-1])/125.0, mycar.last_frontof,false);
+
+        if(tof_iter1 < DATA_LENGTH && collecting) {
+          tof[tof_iter1][0] = mycar.fronttof;
+          tofstamps[tof_iter1] = millis();
+          tof_iter1 ++;
+        }
       }
     }
   }
@@ -834,7 +971,7 @@ void loop()
   
   if(mycar.driving || mycar.orient) {
     //set for one foot
-    if(millis() - mycar.start_time < 20000) {
+    if(millis() - mycar.start_time < 15000) {
       //Serial.println(millis() - mycar.start_time);
       //Serial.println(mycar.fronttof);
       float pid;
@@ -844,7 +981,7 @@ void loop()
       else {
         get_DMP();
         if(!isnan(mycar.yaw)) { //Cover DMP returning nan on start
-          pid = calc_pid(mycar.yaw, mycar.orient_target, mycar.OKP, mycar.OKI, mycar.OKD);
+          pid = calc_pid(mycar.yaw, mycar.orient_target, mycar.OKP, mycar.OKI, mycar.OKD, 1);
         }
       }
       //if(abs(mycar.e_hist[mycar.e_pos-1]) > 5) {
@@ -865,13 +1002,7 @@ void loop()
         else if (anval < 0 && anval > -50) {
           anval = -50;
         }
-        //drivefb(anval);
-        drivefb(166);
-
-        if(mycar.fronttof < 1000){
-          stopmotor();
-          driving = 0;
-        }
+        drivefb(anval);
       }
 
       if(mycar.orient) {

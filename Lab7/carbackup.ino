@@ -101,7 +101,7 @@ int tof_iter1 = 0;
 int tof_iter2 = 0;
 int collecting = 0;
 float adjust = 1.25;
-#define PID_LENGTH 512
+#define PID_LENGTH 4096
 
 float imu_data[DATA_LENGTH][9];
 int timestamps[DATA_LENGTH];
@@ -151,7 +151,7 @@ public:
     volatile double yaw = 0;
 
     //targets
-    int dist_target = 304; //304 mm
+    int dist_target = 1000; //304 mm
     int orient_target = 90; //90 degrees
 
 
@@ -263,9 +263,7 @@ handle_command()
         }
         case GET_PID:
         {
-          Serial.println(mycar.e_pos);
           for (int i = 0; i < mycar.e_pos; i++) {
-                Serial.println("ayayaya");
                 tx_estring_value.clear();
                 tx_estring_value.append("Prop:");
                 tx_estring_value.append(mycar.e_hist[i]);
@@ -354,24 +352,17 @@ int sign(int x) {
 }
 
 
-float calc_pid(int dist, int setpoint, float KP = mycar.SKP, float KI = mycar.SKI, float KD = mycar.SKD, int mode = 0, float alpha = 0.002) {
+float calc_pid(int dist, int setpoint, float KP = mycar.SKP, float KI = mycar.SKI, float KD = mycar.SKD, float alpha = 0.1) {
 
   //proportional terms
   int e = dist-setpoint;
-  if(mode == 1) { 
-    if(e > 180) { //indicates its better to go around the other way
-      e -= 360;
-    } else if(e < -180) {
-      e += 360;
-    }
-  }
   mycar.e_hist[mycar.e_pos] = e;
   mycar.t_hist[mycar.e_pos] = millis();
   //mycar.target_hist[mycar.e_pos][0] = mycar.dist_target;
   mycar.target_hist[mycar.e_pos][1] = mycar.orient_target;
   mycar.e_pos ++;
 
-  //Serial.println(mycar.dt);
+  Serial.println(mycar.dt);
 
   mycar.I += e * float(mycar.dt)/1000; // integral term
   if(mycar.I > 1000) {
@@ -383,7 +374,7 @@ float calc_pid(int dist, int setpoint, float KP = mycar.SKP, float KI = mycar.SK
 
   //Serial.println(mycar.dt);
 
-  if (mycar.e_pos >= PID_LENGTH) { /*
+  if (mycar.e_pos >= PID_LENGTH) { 
     mycar.e_hist[0] = mycar.e_hist[PID_LENGTH-2];
     mycar.e_hist[1] = mycar.e_hist[PID_LENGTH-1];
     mycar.t_hist[0] = mycar.t_hist[PID_LENGTH-2];
@@ -393,10 +384,7 @@ float calc_pid(int dist, int setpoint, float KP = mycar.SKP, float KI = mycar.SK
     for(int i = 2; i < PID_LENGTH; i++) {
       mycar.e_hist[i] = 0;
     }
-    mycar.e_pos = 2;*/
-    mycar.driving = 0;
-    stopmotor();
-    return 0;
+    mycar.e_pos = 2;
   }
 
   if (mycar.e_pos > 1) {
@@ -418,6 +406,8 @@ float calc_pid(int dist, int setpoint, float KP = mycar.SKP, float KI = mycar.SK
 }
 
 void drivefb(int value) {
+
+
   if (value > 0) {
     //startup to avoid deadband
     if(sign(mycar.last_drive) != sign(value) && value < 70) {
@@ -426,7 +416,6 @@ void drivefb(int value) {
       analogWrite(MOTORLB, 0);
       analogWrite(MOTORRB, 0);
       mycar.deadtime = millis();
-      mycar.motor_hist[mycar.e_pos-1] = 70;
       //Serial.println("Deadband Start");
     }
     else if(millis()-mycar.deadtime > 30) {
@@ -434,11 +423,7 @@ void drivefb(int value) {
       analogWrite(MOTORRF, value*adjust);
       analogWrite(MOTORLB, 0);
       analogWrite(MOTORRB, 0);
-      mycar.motor_hist[mycar.e_pos-1] = value;
       //Serial.println("Deadband End");
-    }
-    else {
-      mycar.motor_hist[mycar.e_pos-1] = 70;
     }
   }
   else {
@@ -448,18 +433,14 @@ void drivefb(int value) {
       analogWrite(MOTORLF, 0);
       analogWrite(MOTORRF, 0);
       mycar.deadtime = millis();
-      mycar.motor_hist[mycar.e_pos-1] = -70;
     }
     else if(millis()-mycar.deadtime > 30) {
       analogWrite(MOTORLB, -1*value);
       analogWrite(MOTORRB, -1*value*adjust);
       analogWrite(MOTORLF, 0);
       analogWrite(MOTORRF, 0);
-      mycar.motor_hist[mycar.e_pos-1] = value;
     }
-    else {
-      mycar.motor_hist[mycar.e_pos-1] = -70;
-    }
+    mycar.motor_hist[mycar.e_pos-1] = 166;
   }
 
   mycar.last_drive = value;
@@ -470,7 +451,7 @@ void driveturn(int value) {
 
   if (value > 0) {
     //startup to avoid deadband
-    if(sign(mycar.last_drive) != sign(value) && value < 140) {
+    if(sign(mycar.last_drive) != sign(value) && value < 130) {
       analogWrite(MOTORLF, 140);
       analogWrite(MOTORRB, 140*adjust);
       analogWrite(MOTORLB, 0);
@@ -487,18 +468,15 @@ void driveturn(int value) {
       //Serial.println("Deadband End");
       mycar.motor_hist[mycar.e_pos-1] = value;
     }
-    else {
-      mycar.motor_hist[mycar.e_pos-1] = 140;
-    }
   }
   else {
-    if(sign(mycar.last_drive) != sign(value) && value > -140) {
+    if(sign(mycar.last_drive) != sign(value) && value > -130) {
       analogWrite(MOTORLB, 140);
       analogWrite(MOTORRF, 140*adjust);
       analogWrite(MOTORLF, 0);
       analogWrite(MOTORRB, 0);
       mycar.deadtime = millis();
-      mycar.motor_hist[mycar.e_pos-1] = -140;
+      mycar.motor_hist[mycar.e_pos-1] = 140;
     }
     else if(millis()-mycar.deadtime > 30) {
       analogWrite(MOTORLB, -1*value);
@@ -506,9 +484,6 @@ void driveturn(int value) {
       analogWrite(MOTORLF, 0);
       analogWrite(MOTORRB, 0);
       mycar.motor_hist[mycar.e_pos-1] = value;
-    }
-    else {
-      mycar.motor_hist[mycar.e_pos-1] = -140;
     }
   }
 
@@ -859,7 +834,7 @@ void loop()
   
   if(mycar.driving || mycar.orient) {
     //set for one foot
-    if(millis() - mycar.start_time < 15000) {
+    if(millis() - mycar.start_time < 20000) {
       //Serial.println(millis() - mycar.start_time);
       //Serial.println(mycar.fronttof);
       float pid;
@@ -869,7 +844,7 @@ void loop()
       else {
         get_DMP();
         if(!isnan(mycar.yaw)) { //Cover DMP returning nan on start
-          pid = calc_pid(mycar.yaw, mycar.orient_target, mycar.OKP, mycar.OKI, mycar.OKD, 1);
+          pid = calc_pid(mycar.yaw, mycar.orient_target, mycar.OKP, mycar.OKI, mycar.OKD);
         }
       }
       //if(abs(mycar.e_hist[mycar.e_pos-1]) > 5) {
@@ -890,7 +865,14 @@ void loop()
         else if (anval < 0 && anval > -50) {
           anval = -50;
         }
-        drivefb(anval);
+        //drivefb(anval);
+        drivefb(125);
+
+        if(mycar.fronttof < 300){
+          stopmotor();
+          mycar.driving = 0;
+          //delay(1000);
+        }
       }
 
       if(mycar.orient) {
