@@ -1,0 +1,231 @@
+
+<!-- Page Content  -->
+<link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="../css/style.css">
+
+<div class="wrapper d-flex align-items-stretch">
+    <div id="sidebar-container"></div>
+    <div class="stacked">
+        <div id="content" class="p-4 p-md-5 pt-5">
+            <h1 class="mb-4"><strong>Lab 8 - Stunt!! </strong></h1>
+            <p>
+                Lab 8 involved implementing a stunt on the RC car, being either a flip or a drift. I chose to implement a drift as it 
+                seemed less likely to damage the car than a flip.
+            </p>
+
+            <h3><Strong>Lab:</Strong></h3>
+            <h4><Strong>The Drift</Strong></h4>
+            <p>
+                In order to initiate a drift, I created a new bluetooth command. This command, SKRT, set a flag that would prompt the car to start drifting.
+                Additionally, it also records a time used to timeout the system. The code for this is below:
+            </p>
+            <div class = "centered">
+                <img src="/images/lab8/BT.png" alt="Bluetooth command" class="responsive-img">
+            </div>
+            <p>
+                I split the drift task into 3 main components. The first was driving to 3 feet, or 904 mm, of a wall, where the drift would be initiated. The second part 
+                is completing a 180 degree turn or drift. Once this has been completed, the third step is to drive away in a straight line. 
+                The two straight line components can be done with just open loop control, driving as fast as possible towards the wall and away from it. However,
+                I decided to initially implement this using PID control as I found that just driving to the wall at full speed would cause the car 
+                to slide into the wall. PID control would allow for the car to approach the wall fast but slow down a bit before doing the drift, making it slide less far. 
+                I used a higher P value of 0.12 as I still wanted the car to be going relatively fast even when it was close to the target. Additionally, using PID would 
+                prevent collisions during driving away. The code for the first state of driving straight to the wall is below:
+            </p>
+            <div class = "centered">
+                <img src="/images/lab8/state0.png" alt="First state" class="responsive-img">
+            </div>
+            <p>
+                This occurs in the main loop of the program. Once the drift command is recieved over bluetooth, the distance target is 
+                set to 3 feet (904 mm) and <code>mycar.driving</code> would be set to make the car drive forward with PID control. Once the front 
+                TOF sensor is within 3 feet, the turn is initiated by setting the orientation target to the current yaw plus 180 degrees. It then 
+                indicated that the next state should be progressed to. One bug I encountered 
+                is that by using PID control for both the initial approach and the orientation, the integral term was built up during the drive approach, and thus was too 
+                high for the orientation step. This made the car overshoot the setpoint significantly, and was fixed by setting the integral back to 0 on the state shift.
+                The next state was simpler, shown below:
+            </p>
+            <div class = "centered">
+                <img src="/images/lab8/state1.png" alt="second state" class="responsive-img">
+            </div>
+            <p>
+                In order to have the orientation as close to a 180 degree turn as possible while still finishing fast, I created 
+                a way to determine when the majority of the oscillations of the PID contol were done. I accomplished this by taking the average of 
+                the last 10 error measurements from the PID. If on average these were within 2 degrees accuracy, the car would go to the next state.
+                I chose 2 degrees and 10 measurements through experimentation. A smaller value than 2 degrees would be more accurate in acheiving the 180 degrees turn, but 
+                take longer to oscillate to. Conversly, a larger average can be acheived earlier, but trades off accuracy. I found this still sometimes 
+                would go to the next state early, so I made it so each of the last 10 measurements had to be under 10 degrees off as well. Once this condition was 
+                met, the final state below occurs:
+            </p>
+            <div class = "centered">
+                <img src="/images/lab8/state2.png" alt="third state" class="responsive-img">
+            </div>
+            <p>
+                The final state would just drive away from the wall, timing out after 3 seconds.
+                Additionally, the PID helps keep it from running into any other objects.
+            </p>
+
+            <h4><Strong>The Results</Strong></h4>
+            <p>
+                My general approach to each trial was to record the error input to the PID loop for each stage, the TOF sensor readings (with Kalman filter), 
+                the IMU readout (with DMP), and the motor control. Below is a video of one of the trial runs:
+            </p>
+            <div class="centered">
+                <video width="640" height="480" controls>
+                    <source src="/images/lab8/trial1.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+            <p>
+                There are a few notable things about this trial. Firstly, the car does reach the wall and start turning at around 3 tiles (3 ft), and 
+                then turns around and drives back as desired. Below is an image of the error inputs to the PID for this run, split into the 3 stages.
+            </p>
+            <div class = "centered">
+                <img src="/images/lab8/errors.png" alt="Error inputs" class="responsive-img">
+            </div>
+            <p>
+                In state 0 and 2, this shows the error in TOF distance from the desired target (904 mm) in mm, and in state 1, it is the difference in 
+                angle in degrees for orientation control. Some notes are that one can observe in state 0 the error decreases to 0, which once that is 
+                reached, a turn starts. In state 1, the oscillation back and forth of the car can be seen, before it meets the error threshold, about 180 
+                degrees away from the initial yaw. Then, in state 2, the car drives away, having noisy measurements due to no objects being close in sensor 
+                view. Below are the TOF, Yaw, and motor commands:
+            </p>
+            <div class = "centered">
+                <div class = "row">
+                    <div class = "column">
+                        <img src="/images/lab8/TOF1.png" alt="TOF 1" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab8/yaw1.png" alt="Yaw 1" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab8/motor1.png" alt="Motor control 1" class="responsive-img">
+                    </div>
+                </div>
+                <p>
+                    TOF (Kalman Filter mm), Yaw (degrees), and Motor Output (PWM)
+                </p>
+            </div>
+            <p>
+                The TOF uses the Kalman filter to predict the distance when new TOF readings are not ready, and can trigger the next state. The TOF can be observed 
+                to vary a lot as the car spins as well. The yaw shows the car spinning and reaching 180 degrees from the initial yaw. The motor command also demonstrates the 3 states, with 
+                the motors starting with PID control in the same direction, then spinning opposite directions to turn, and then turning the same directions to drive away. 
+                Below is a second trial with the same PID values, and the sensor readings associated:
+            </p>
+            <div class="centered">
+                <video width="640" height="480" controls>
+                    <source src="/images/lab8/trial2.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+            <div class = "centered">
+                <div class = "row">
+                    <div class = "column">
+                        <img src="/images/lab8/TOF2.png" alt="TOF 1" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab8/yaw2.png" alt="Yaw 1" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab8/motor2.png" alt="Motor control 1" class="responsive-img">
+                    </div>
+                </div>
+                <p>
+                    TOF (Kalman Filter mm), Yaw (degrees), and Motor Output (PWM)
+                </p>
+            </div>
+
+            <p>
+                In these last 2 trial runs, while the drift does work and the car comes back, I noticed 2 major shortcomings. First, the car would overshoot a 
+                lot during the orientation phase, wasting time. Secondly, even with PID, the car would always slide very close to the wall, preventing a faster approach without 
+                collision. To attempt to address these, I changed the initial setpoint to 5 feet and raised the initial proportional term to a P of 0.15, with the hope that the 
+                extra room would allow the car to approach faster and not hit the wall. Secondly, I lowered the P value for the orientation control from 0.9 to 0.7 to lower the 
+                initial speed of the rotation, and raised the derivative to 0.03 to help prevent overshoot. This is the trial I got from this:
+
+            </p>
+            <div class="centered">
+                <video width="640" height="480" controls>
+                    <source src="/images/lab8/trial3.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+            <div class = "centered">
+                <div class = "row">
+                    <div class = "column">
+                        <img src="/images/lab8/TOF3.png" alt="TOF 1" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab8/yaw3.png" alt="Yaw 1" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab8/motor3.png" alt="Motor control 1" class="responsive-img">
+                    </div>
+                </div>
+                <p>
+                    TOF (Kalman Filter mm), Yaw (degrees), and Motor Output (PWM)
+                </p>
+            </div>
+            <p>
+                There are several important notes from this run. Firstly, the trial is overall much faster, taking only 5 seconds of video versus the other runs 8 or 9 seconds.
+                This is also reflected in the time stamps of each individual segment, with the yaw oscillation especially being smaller. The oscillations also appear to be smaller. However,
+                it also does slightly bump into the wall, showing that even with the 5 foot distance to start the drift, the car still slides too far. This is reflective of 
+                the primary challenge of this lab, which is the tradeoff of speed and overshoot. Whenever I tried to do something faster, the amount of sliding and overshoot 
+                was far larger. This can be partially mitigated in PID terms, but is still prevalant. Additionally, this stunt is incredibly surface dependent, due to variable amounts 
+                of friction. Even different tiles behaved differently, seen below: 
+            </p>
+            <div class="centered">
+                <video width="640" height="480" controls>
+                    <source src="/images/lab8/trial4.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+            <p>
+                The car doesnt repeatedly overshoot during orientation control on this type of tile, overshooting just once and then being able to navigate to the correct angle. 
+                This shows that different PID values will make this stunt behave differently on different surfaces. One improvement that might make the car more consistent
+                would be to add more friction to the car wheels, as they seem to be slipping too much with the duct tape. While a certain amount of slipping is needed for 
+                the stunt, the more it slips, the less control the car has over the stunt, such as sliding into a wall or continually overshooting on orientation.
+            </p>
+            <h4><Strong>Blooper</Strong></h4>
+            <p>
+                Below is a blooper of one of the worst collisions the car had:
+            </p>
+            <div class="centered">
+                <video width="640" height="480" controls>
+                    <source src="/images/lab8/trial5.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+            <p>
+                The car properly does the drift (albeit at low speed), but I failed to consider that the wall behind it was glass. Normally, the 
+                PID control would stop a collision, but the TOF struggles with the glass, so the car runs into it at top speed.
+            </p>
+            
+
+            <h4><Strong>References</Strong></h4>
+            <p>
+                I worked in the lab section on this code with Giorgi Berndt and Jorge Corpa Chunga. I referred to Stephen Wagner's code for some short DMP 
+                troubleshooting.
+            </p>
+
+
+
+
+            
+    </div>
+
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/popper.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/main.js"></script>
+
+    <script>
+        fetch("sidebar.html")
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("sidebar-container").innerHTML = data;
+                document.getElementById("sidebarCollapse").addEventListener("click", function () {
+                    document.getElementById("sidebar").classList.toggle("active");
+                });
+            });
+    </script>
+</div>
