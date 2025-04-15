@@ -1008,7 +1008,7 @@ void loop()
           sum += mycar.e_hist[mycar.e_pos-j];
         }
         sum = sum/10.0;
-        if(abs(sum) < 4){
+        if(abs(sum) < 2){
           mycar.driving = 1;
           mycar.orient = 0;
           mycar.state = 2;

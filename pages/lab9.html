@@ -1,0 +1,491 @@
+
+<!-- Page Content  -->
+<link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="../css/style.css">
+
+<div class="wrapper d-flex align-items-stretch">
+    <div id="sidebar-container"></div>
+    <div class="stacked">
+        <div id="content" class="p-4 p-md-5 pt-5">
+            <h1 class="mb-4"><strong>Lab 9 - Mapping </strong></h1>
+            <p>
+                The goal of lab 9 is to use the car with TOF sensors to create a 2D map of an environment that the 
+                car is placed in. This is accomplished by spinning the car in place in a circle, stopping at increments to take 
+                measurements. The angle and measured TOF distance can then be used to reconstruct a map.
+            </p>
+
+            <h3><Strong>Lab:</Strong></h3>
+            <h4><Strong>Control</Strong></h4>
+            <p>
+                In order to obtain the map samples, a few different control approaches could be used. Open loop control could be used to 
+                make the car turn slightly and then stop, but this means that the increments of the data may not be consistent. PID orientation 
+                control can be used to hit a series of setpoints throughout the circle instead. Finally, PID could be used for velocity control, 
+                and samples can be constantly taken during the turn. I chose to use PID orientation control to go through a series of points as 
+                my PID control could turn slowly and acheive points accurately. 
+            </p>
+            <p>
+                The first step was to add bluetooth commands for mapping. I added two commands, one called MAP that would trigger the car to start 
+                mapping the area, and once called SEND_MAP that sends the mapped out data back. These are seen below:
+            </p>
+            <code>
+                <pre>
+                    case MAP:
+                    {
+                      Serial.println("Map command recieved");
+                      mycar.map = 1; //start mapping
+                      mycar.start_time = millis(); //timeout
+                      mycar.firstmap = 0; //track number of circles
+                      mycar.orient_target = 0; //orient to 0 degrees first
+                      mycar.orient = 1;
+                      iter = 0;
+                      mycar.e_pos = 0;
+                      break;
+                    }
+                    case SEND_MAP:
+                    {
+                      for (int i = 0; i < iter; i++){
+                        tx_estring_value.clear();
+                        tx_estring_value.append("tof:");
+                        tx_estring_value.append(tof[i][0]);
+                        tx_estring_value.append("yaw:");
+                        tx_estring_value.append(mapyaw[i]);
+                        tx_estring_value.append("time:");
+                        tx_estring_value.append(tofstamps[i]);
+                        tx_characteristic_string.writeValue(tx_estring_value.c_str());
+                      }
+                      break;
+                    }
+                </pre>
+            </code>
+            <p>
+                The MAP command made the car orient itself to 0 degrees and then start mapping a circle, which it knew to do from the flag <code>mycar.map</code>. 
+                It additionally reset indices for mapping data. The SEND_MAP command transmited the TOF reading, yaw, and time at which the reading was captured. 
+                This was unpacked using a notification handler in python. Only the front facing TOF sensor was used to collect map data. While the sensor 
+                on the right of the car could have also been used, using one sensor for all the reads meant that there wouldn't be any inconsistency a second 
+                sensor potentially having a different amount of error in its measurements.
+            </p>
+            <p>
+                As mentioned earlier, orientation control was used with PID as it already worked well on this robot. Additionally, it allowed for the robot to 
+                be fully stationary during sensor reads, which ensures the vehicle is stationary for the full TOF timing budget and makes the measurements more 
+                accurate than if it was spinning. The following code implements the orientation control through a series of set points:
+            </p>
+            <code>
+                <pre>
+                    if(mycar.map) {
+                        if(mycar.orient == 0) { //Not currently turning, should make wait for each turn to be done
+                          int counter = 0;
+                          Serial.print("MAP");
+                          delay(100);
+                          while (counter < 1) { //wait for x sensor readings
+                            if(mapping()) {//take sensor readings, make sure it is new tof data
+                              counter += 1; 
+                              Serial.println("Sensoring");
+                            }
+                          }
+                          if(mycar.orient_target == 0) { //count number of loops
+                            mycar.firstmap ++;
+                          }
+                          if (mycar.firstmap == 3) { //two full circle, done mapping
+                            mycar.map = 0;
+                            Serial.println("Circle Done");
+                            return;
+                          }
+                    
+                          Serial.print("Target :");
+                          Serial.println(mycar.orient_target);
+                          mycar.start_time = millis();
+                          mycar.orient_target += 10; //Take readings every 10 degrees, 36 total per loop
+                          if(mycar.orient_target > 180) { //Keep target between -180 and 180
+                            mycar.orient_target -= 360;
+                          }
+                          mycar.orient = 1; //start turning to new direction
+                        }
+                      }
+                </pre>
+            </code>
+
+            <p>
+                The general approach was to set an orientation target, wait for that orientation to be acheived, take measurements, and then 
+                set a new orientation target. This code was placed in the loop() function, and would only be entered both if mapping and if the 
+                last orientation goal was met. It takes a number of sensor measurements, and then checks if the target is at 0 degrees. If it is, a rotation 
+                happened, which is tracked. Once a desired number of full circles had been made, it would stop mapping. I played with taking multiple measurements 
+                at once and averaging them, but found that taking one measurement at a time seemed to be more consistent, as otherwise outliers sometimes would 
+                drastically skew those averages. I then had each mapping location happen in two loops, to both make sure the car wasn't moving too much 
+                throughout the mapping and to get some more data in case some of the reads were inaccurate. The orientation target was incremented by 10 degrees 
+                each step, meaning 36 datapoints were collected per rotation, or 72 total. This actually ended up being 73 data points as 0 degrees is measured 3 times, 
+                to have an idea of how far the robot moved over time. While the lab only calls for 14 data points, I found taking more made for a more accurate map 
+                overall and better captured environmental features. A delay was also added to make sure the car was fully at rest when the measurements were taken.
+                The mapping function that actually recorded sensor data is below:
+            </p>
+            <code>
+                <pre>
+                    bool mapping() {
+                        //collect TOF data for mapping
+                        while (!tof1.checkForDataReady())
+                        {
+                          delay(1);
+                        }
+                        int new_time = millis();
+                        int dist = tof1.getDistance();
+                        get_DMP();
+                        tofstamps[iter] = new_time;
+                        tof[iter][0] = dist;
+                        mapyaw[iter] = mycar.yaw;
+                        iter++;
+                        tof1.clearInterrupt();
+                        tof1.stopRanging();
+                        tof1.startRanging();
+                      
+                        return true;
+                      }
+                </pre>
+            </code>
+            <p>
+                This code blocked until a new TOF reading is ready, at which point it records the data and captures the current yaw, along side timestamps.
+                It then restarts the sensor for the next ranging. It was chosen to have the code block until a sensor reading was ready to ensure that 
+                the collected data would always be new TOF data, with no predicted TOF data being used.
+            </p>
+            <p>
+                I also had to change the way the orientation control ended in order for this to work. Similar to in the drift stunt, an average of the 
+                last several errors is taken to determine when an angle has been met, shown below:
+            </p>
+
+            <code>
+                <pre>
+                    float sum = 0;
+                    if(mycar.e_pos > 10) {
+                        for (int j =1; j < 11; j++) {
+                            //will terminate if last 10 readings have less than 5 degrees error and average to less than 2 degree error
+                            if(abs(mycar.e_hist[mycar.e_pos-j]) > 5) {
+                            sum += 1000;
+                            }
+                            sum += mycar.e_hist[mycar.e_pos-j];
+                        }
+                        sum = sum/10.0;
+                        //Serial.println("End comp");
+                        if(abs(sum) < 2){
+                            Serial.println("Target met");
+                            stopmotor();
+                            mycar.I = 0;
+                            mycar.orient = 0;
+                        }
+                    }
+                </pre>
+            </code>
+
+            <p>
+                This code would stop the car as soon as the average error from the setpoint was smaller than 2 degrees, which was precise 
+                enough given that data was being taken every 10 degrees. The higher this threshold, the less likely that the car would need 
+                to oscillate before taking a sensor reading, but the increments at which data was measured becomes more inconsistent. Below is an 
+                image of the setpoints changing over time, showing that the car went through 2 loops in 10 degree increments:
+            </p>
+
+            <div class = "centered">
+                <img src="/images/lab9/targets.png" alt="Stepping through target orientations" class="responsive-img">
+            </div>
+
+            <h4><Strong>Generating a Map</Strong></h4>
+            <p>
+                In order to use this code to generate a map, I placed the car in 5 different locations in the lab room setup, which is seen below:
+            </p>
+            <div class = "centered">
+                <img src="/images/lab9/maploc1.png" alt="Mapping location" class="responsive-img">
+            </div>
+            <p>
+                This is the environment that was being mapped, with each piece of tape representing a location at which data was collected. Each location 
+                is denoted as an X, Y position relative to the origin in feet. The origin is where the robot is in the pictured image. The points at 
+                which the region was mapped from is (0,0), (-3,-2), (5,3), (0,3), and (5,-3). In order to form a cohesive map, it was important that for each 
+                point data was measured at, the angles were consistent. In other words, 0 degrees at on point needed to be 0 degrees at all other points, as otherwise 
+                the mapped data would not piece together correctly. Since the IMU considers itself to be at 0 degrees at startup, if it is started in different orientations,
+                the data wouldn't be consistent. I mitigated this by making sure that the robot was always facing directly to the right wall in the image to start. The 
+                right was chosen as the positive X axis is considered to be 0 degrees for the map, corresponding to the car facing right.
+                Alternatively, all of the data can be mapped in one contiguous run of the system, although I found that some error in the IMU reading could be accumulated over 
+                this time. The following is a video of the car recording data at the origin:
+            </p>
+
+            <div class="centered">
+                <video width="640" height="480" controls>
+                    <source src="/images/lab9/origin.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+            <p>
+                The car turns mostly on axis for two rotations, drifting only slightly but staying within the square it started it's measurement in. Normally, 
+                it doesn't even need to oscillate to reach the desired angle, although on some occassions it does oscillate a few times to ensure it is close 
+                enough to the target. Below is a graph of the motor control being sent on this run:
+            </p>
+            <div class = "centered">
+                <img src="/images/lab9/motor.png" alt="Motor drive" class="responsive-img">
+            </div>
+            <p>
+                This is the motor control for the right motor, with the left motor being the same but inverted. 
+                The motor is almost always going in the same direction, with only brief periods of reversed command to help stop. 
+                The one time where the motor is running negative for a long time corresponds with where the target is overshot in the video, 
+                with the next few oscillations fixing this overshoot. This behavior is also captured in the earlier graph of setpoints, 
+                where some setpoints stay the same longer, indicating they took longer to be met.
+                The motors were stopped for very short periods of time due to how quick the sensor measurements are taken.
+                Below is the TOF and yaw readings from this run.
+            </p>
+
+            <div class = "centered">
+                <div class = "row">
+                    <div class = "column">
+                        <img src="/images/lab9/TOF.png" alt="TOF" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab9/yaw.png" alt="Yaw" class="responsive-img">
+                    </div>
+                </div>
+                <p>
+                    TOF (mm), Yaw (degrees)
+                </p>
+            </div>
+
+            <p>
+                Notably, the TOF measurements do not use the Kalman filter or extrapolation, as they could be collected whenever the sensor had new 
+                data. The yaw as expected cycles between -180 and 180 twice for two full circles. With this data collected, a polar graph of the distance 
+                against the angle could be generated. This was done in python with the following code:
+            </p>
+
+            <code>
+                <pre>
+                    angles_rad = np.radians(yaw)
+                    tof = [val * 0.00328084 for val in tof]
+
+                    ax.plot(angles_rad, tof, marker='o', linestyle='-', color=colors[i], label=plotnames[i])
+                    ax.set_title(plotnames[i], fontsize=10, pad=30) 
+                    ax.set_theta_zero_location("E") #Put 0 to the right
+                    ax.set_theta_direction(-1) #Clockwise 
+                </pre>
+            </code>
+
+            <p>
+                The angles had to be converted from degrees into radians to plot them, and the distance was converted to be in terms of feet.
+                The following plot for the origin scan was made:
+            </p>
+            <div class = "centered">
+                <img src="/images/lab9/origpolar1.png" alt="Origin scan polar coordinates" class="responsive-img">
+            </div>
+
+            <p>
+                The two separate scanning circles can be seen in this image, with both looking pretty similar. Notably, there is some 
+                slight inconsistency with where each loop sees the start of an object, which is when the reading goes from a large radius to a 
+                small radius. This is likely due to the car slightly moving throughout the loop. In order to verify that this graph made sense, I 
+                compared it to the environment I was scanning. At 0 degrees it shows something close, which makes sense as there is the square in 
+                the enviroment directly to the right of where the car was scanning (1). It also shows something close below the car, which makes sense 
+                as there is a piece of the wall jutting out directly under that scanning location (2). Finally between 135 degress and 315 degrees, it 
+                accurately captures the walls, including where the left wall gets closer to the car (3). I went through a process of comparing the polar 
+                chart to known obstacles for each reading to make sure they seemed reasonable. 
+            </p>
+
+            <p>
+                As mentioned before, there are some inaccuracy with the measurements, both between different circles spinning in place and from the 
+                sensors themselves. In the polar graph, I generally found that measurements of objects that were close to the car (less than 1000 mm away),
+                would be no more than 100 mm different between the measurement on the first and second loop, averaging closer to 50 mm difference. Since the car 
+                stays in the 1 foot by 1 foot square, at most there could be 0.5 ft (~150 mm) of positional drift between the two, but this data suggests that it was likely 
+                far less. This varies a bit more at larger distances, being up to 300 mm off. However, it was still on average closer to 100 mm of variance Additionally, even though the movement within the square is slight, I suspect it changes 
+                the angle at which a car starts detecting an object, causing for the slight skew in the polar graph. I found that the yaw reported was always within 
+                within 4 degrees of the target yaw, and on average within 2 degrees. Because of this variation, I used the DMP reported yaw instead of the setpoint 
+                for each of these graphs. In a scenario where a 4 by 4 meter room is being scanned from the center, I would expect at worse to be 450 millemeters off on a measurement from summing the worst errors
+                for reading at far distances and the potential movement of the car, but on average to be closer to 150 mms off.
+            </p>
+
+            <p>
+                The next step was to convert this polar graph into Cartesian coordinates. This was accomplished using a transform matrix in python,
+                in the following code:
+            </p>
+            <code>
+                <pre>
+                    angles_rad = np.radians(yaw)
+                    distances = tof
+
+                    # Scanning location
+                    x_robot = 0
+                    y_robot = 0
+
+                    x_obstacles = []
+                    y_obstacles = []
+
+                    for i in range(len(angles_rad)):
+                        T = np.array([
+                            [np.cos(-angles_rad[i]), -np.sin(-angles_rad[i]), x_robot],
+                            [np.sin(-angles_rad[i]),  np.cos(-angles_rad[i]), y_robot],
+                            [0,                0,               1]
+                        ])
+                        # Polar point in homogeneous coordinates (r, 0, 1)^T
+                        local_point = np.array([[distances[i]], [0], [1]])
+
+                        # Transform to global 
+                        global_point = T @ local_point
+                        
+                        x_obstacles.append(global_point[0, 0])
+                        y_obstacles.append(global_point[1, 0])
+
+                    plt.plot(x_robot, y_robot, 'ro', color='black')
+                    plt.scatter(x_obstacles, y_obstacles)
+                        
+                    plt.axis('equal')
+                    plt.grid(True)
+                    plt.title("Map from TOF Sensor")
+                    plt.xlabel("X")
+                    plt.ylabel("Y")
+                    plt.legend()
+                    plt.show()
+                </pre>
+            </code>
+
+            <p>
+                Creating a global map from the polar measurement has two components, which is converting from polar to cartesian, and then 
+                swapping from the robot frame to the global frame. The conversion from polar to cartesian is handled by the sin and cosine 
+                elements of the transformation matrix T, which is the rotation matrix component of the transformation matrix. 
+                The angle fed into the transformation matrix is actually multiplied times negative 1, 
+                as my robot spun clockwise, but the general polar to cartesian transform assumes that 0 to 2 PI radians is counter clockwise. 
+                I could have alternatively just changed the signs on the sin function to acheive this. The x_robot and y_robot parts of the 
+                matrix account for shifting from the robot frame to the global frame, making up the translation matrix. Without these, the robot frame has the robot at (0,0), 
+                while in reality the robot is scanning from a variety of locations. X_robot and y_robot are the locations that the robot scanned 
+                from in feet. In order to use this matrix, a vector with the measured TOF distance is made, with 0 and 1 to make the correct size.
+                This is then dotted with the transform matrix to convert that measured distance to a global x and y point. Using this created the 
+                following global map for the origin's measurements.
+            </p>
+
+            <div class = "centered">
+                <img src="/images/lab9/origcart1.png" alt="Origin scan cartesian global coordinates" class="responsive-img">
+            </div>
+
+            <p>
+                I once again verified that this data looked reasonable, with all expected obstacles being displayed at the roughly correct relative distances.
+                Having proven that the car could capture locations, I then did the scans for each of the remaining points. I saved each run into a CSV 
+                so that they could be easily loaded and put together later. The scanned data generates the following polar plots and corresponding cartesian plots:
+            </p>
+            <h5><Strong>Upper right (5,3)</Strong></h5>
+            <div class = "centered">
+                <div class = "row">
+                    <div class = "column">
+                        <img src="/images/lab9/53p.png" alt="TOF" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab9/53c.png" alt="Yaw" class="responsive-img">
+                    </div>
+                </div>
+                <p>
+                    Polar, Cartesian
+                </p>
+            </div>
+
+            <h5><Strong>Upper left (0,3)</Strong></h5>
+            <div class = "centered">
+                <div class = "row">
+                    <div class = "column">
+                        <img src="/images/lab9/03p.png" alt="TOF" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab9/03c.png" alt="Yaw" class="responsive-img">
+                    </div>
+                </div>
+                <p>
+                    Polar, Cartesian
+                </p>
+            </div>
+
+            <h5><Strong>Lower left (-3,-2)</Strong></h5>
+            <div class = "centered">
+                <div class = "row">
+                    <div class = "column">
+                        <img src="/images/lab9/n3n2p.png" alt="TOF" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab9/n3n2c.png" alt="Yaw" class="responsive-img">
+                    </div>
+                </div>
+                <p>
+                    Polar, Cartesian
+                </p>
+            </div>
+
+            <h5><Strong>Lower right (5,-3)</Strong></h5>
+            <div class = "centered">
+                <div class = "row">
+                    <div class = "column">
+                        <img src="/images/lab9/5n3p.png" alt="TOF" class="responsive-img">
+                    </div>
+                    <div class = "column">
+                        <img src="/images/lab9/5n3c.png" alt="Yaw" class="responsive-img">
+                    </div>
+                </div>
+                <p>
+                    Polar, Cartesian
+                </p>
+            </div>
+
+            <p>
+                Each of these once again are largely similar between the 2 circles they did, with slight distances in measurements further away. I gave each 
+                a different color so they could be told apart in the global map. The following shows the full global map generated by putting each of these together:
+            </p>
+
+            <div class = "centered">
+                <img src="/images/lab9/unaltmap.png" alt="Unaltered full map" class="responsive-img">
+            </div> 
+            <p>
+                Each black dot denotes a location that the robot scanned at, with all of the scanned points being displayed. I noticed that the 
+                further away data on this map seemed to be less accurate. This was especially notable with some of the measurements in purple, showing 
+                far on the left of the map and missing the part jutting out from the bottom wall. To clean this up, I displayed only points that were 
+                within 6 feet of the measuring location. This gave the following map:
+            </p>
+
+            <div class = "centered">
+                <img src="/images/lab9/map.png" alt="full map" class="responsive-img">
+            </div> 
+            <p>
+                This map is far more clean and consistent throughout, capturing each of the obstacles. Notably, the right side of the box in the 
+                middle of the area (1) isn't captured as no scan point could see it, and the right side of the part sticking out of the bottom wall (2) 
+                was missing due to the lower right measurements being poor at that distance. Despite these shortcomings, the map overall is quite accurate 
+                in capturing the full enviroment. In order to make this map more useable for later assignments, I fit line segments to each detected obstacle, 
+                creating the following map: 
+            </p>
+
+            <div class = "centered">
+                <img src="/images/lab9/linemap.png" alt="line map" class="responsive-img">
+            </div> 
+
+            <p>
+                This map was composed of 14 different line segments, which are in a table below, with each lines' approximate start and end coordinates:
+            </p>
+
+            <div class = "centered">
+                <img src="/images/lab9/linetab.png" alt="table" class="responsive-img">
+            </div> 
+
+            <p>
+                These lines were then split into two lists, one of start points and one of end points, to be loaded in for future labs.
+            </p>
+
+
+            <h4><Strong>References</Strong></h4>
+            <p>
+                I worked in the lab section on this code with Giorgi Berndt and Henry Calderon. I referred to Mikayla Lahr's website for layout reference.
+            </p>
+
+
+
+
+            
+    </div>
+
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/popper.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/main.js"></script>
+
+    <script>
+        fetch("sidebar.html")
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("sidebar-container").innerHTML = data;
+                document.getElementById("sidebarCollapse").addEventListener("click", function () {
+                    document.getElementById("sidebar").classList.toggle("active");
+                });
+            });
+    </script>
+</div>
