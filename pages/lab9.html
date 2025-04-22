@@ -10,7 +10,7 @@
         <div id="content" class="p-4 p-md-5 pt-5">
             <h1 class="mb-4"><strong>Lab 9 - Mapping </strong></h1>
             <p>
-                The goal of lab 9 is to use the car with TOF sensors to create a 2D map of an environment that the 
+                The goal of lab 9 is to use the car and TOF sensors to create a 2D map of an environment that the 
                 car is placed in. This is accomplished by spinning the car in place in a circle, stopping at increments to take 
                 measurements. The angle and measured TOF distance can then be used to reconstruct a map.
             </p>
@@ -111,7 +111,7 @@
                 last orientation goal was met. It takes a number of sensor measurements, and then checks if the target is at 0 degrees. If it is, a rotation 
                 happened, which is tracked. Once a desired number of full circles had been made, it would stop mapping. I played with taking multiple measurements 
                 at once and averaging them, but found that taking one measurement at a time seemed to be more consistent, as otherwise outliers sometimes would 
-                drastically skew those averages. I then had each mapping location happen in two loops, to both make sure the car wasn't moving too much 
+                drastically skew those averages. I did two circle for each mapping location, to both make sure the car wasn't moving too much 
                 throughout the mapping and to get some more data in case some of the reads were inaccurate. The orientation target was incremented by 10 degrees 
                 each step, meaning 36 datapoints were collected per rotation, or 72 total. This actually ended up being 73 data points as 0 degrees is measured 3 times, 
                 to have an idea of how far the robot moved over time. While the lab only calls for 14 data points, I found taking more made for a more accurate map 
@@ -175,7 +175,7 @@
             </code>
 
             <p>
-                This code would stop the car as soon as the average error from the setpoint was smaller than 2 degrees, which was precise 
+                This code would stop the car as soon as the average error from the setpoint over the last 10 errors was smaller than 2 degrees, which was precise 
                 enough given that data was being taken every 10 degrees. The higher this threshold, the less likely that the car would need 
                 to oscillate before taking a sensor reading, but the increments at which data was measured becomes more inconsistent. Below is an 
                 image of the setpoints changing over time, showing that the car went through 2 loops in 10 degree increments:
@@ -284,7 +284,7 @@
                 sensors themselves. In the polar graph, I generally found that measurements of objects that were close to the car (less than 1000 mm away),
                 would be no more than 100 mm different between the measurement on the first and second loop, averaging closer to 50 mm difference. Since the car 
                 stays in the 1 foot by 1 foot square, at most there could be 0.5 ft (~150 mm) of positional drift between the two, but this data suggests that it was likely 
-                far less. This varies a bit more at larger distances, being up to 300 mm off. However, it was still on average closer to 100 mm of variance Additionally, even though the movement within the square is slight, I suspect it changes 
+                far less. This varies a bit more at larger distances, being up to 300 mm off. However, it was still on average closer to 100 mm of variance. Additionally, even though the movement within the square is slight, I suspect it changes 
                 the angle at which a car starts detecting an object, causing for the slight skew in the polar graph. I found that the yaw reported was always within 
                 within 4 degrees of the target yaw, and on average within 2 degrees. Because of this variation, I used the DMP reported yaw instead of the setpoint 
                 for each of these graphs. In a scenario where a 4 by 4 meter room is being scanned from the center, I would expect at worse to be 450 millemeters off on a measurement from summing the worst errors
@@ -458,6 +458,8 @@
 
             <p>
                 These lines were then split into two lists, one of start points and one of end points, to be loaded in for future labs.
+                These lines didn't end up being perfectly horizontal and vertical, and looking at the individual scans for each location 
+                each obstacle with enough precision that it would be useable for some path planning.
             </p>
 
 
