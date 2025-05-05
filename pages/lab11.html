@@ -1,0 +1,352 @@
+
+<!-- Page Content  -->
+<link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="../css/style.css">
+
+<div class="wrapper d-flex align-items-stretch">
+    <div id="sidebar-container"></div>
+    <div class="stacked">
+        <div id="content" class="p-4 p-md-5 pt-5">
+            <h1 class="mb-4"><strong>Lab 11 - Grid Localization using Bayes Filter in the Real World </strong></h1>
+            <p>
+                Lab 11 is similar to lab 10 in that it implements grid localization using a Bayes Filter, but this time it is performed with 
+                the real robot. In order for the robot to navigate autonomously in an area given a map, it has to know where it is in 
+                relation to this map, known as localizing itself. This can be accomplished by taking sensor readings of all the points around the robot 
+                and using the update step of the Bayes filter to estimate where the robot is on the map.
+            </p>
+            <h3><Strong>Prelab:</Strong></h3>
+            <p>
+                To prepare for this lab, I copied the Lab 11 notebooks that were provided, for both simulation and the real robot, into my Lab 10 simulation 
+                file. However, in order to actually use the real robot, the notebook needed to be able to connect to the robot over Bluetooth. To accomplish 
+                this, I also copied the “base_ble.py”, “ble.py”, “connection.yaml” and “cmd_types.py” files from my Lab 9 - Mapping, into the same folder as 
+                the notebooks. This ensured that the notebooks could connect over Bluetooth to the robot and had access to the most recent iteration of Bluetooth
+                commands that had been implemented. I additionally read through both of the provided notebooks and the "localization_extras.py" to 
+                understand them prior to the lab.
+            </p>
+
+            <h3><Strong>Lab:</Strong></h3>
+            <h4><Strong>Simulation</Strong></h4>
+            <p>
+                The first step of this lab was to run the "lab11sym.ipynb" to verify the library was correctly installed and demonstrate 
+                the localization functioning. This is imaged below:
+            </p>
+
+            <div class = "centered">
+                <img src="/images/lab11/sim.png" alt="Lab11 Sim" class="responsive-img">
+            </div> 
+
+            <p>
+                In this image, the green line represents the ground truth of the simulated robot location, the red line is the 
+                location that was tracked only using odometry, and the blue line is the predicted location using the Bayes filter. 
+                As can be seen, the Bayes Filter is far better than the odometry and generally pretty close to the real location, 
+                although it is sometimes a bit off. This gives a good baseline for how close to expect our real world localization 
+                to be to the actual real world position.
+            </p>
+
+            <h4><Strong>Real World Localization</Strong></h4>
+            <p>
+                When completing the real world localization, only the update step of the Bayes Filter was used. This is because the 
+                robot doesn't have real odometry since it lacks encoders, and even though other sensors like the IMU could supplement 
+                for this, the robot is so noisy that it would be not very useful. Thus, this lab instead consists of having the robot 
+                spin in place for one circle, collecting sensor measurements, and then computing the update step. The function that had 
+                to be modified to achieve this was the "perform_observation_loop" function. This needed to command the car over bluetooth to spin 
+                and return a column vector of 18 sensor readings, with the assumption each sensor reading was 20 degrees apart. This code is 
+                below:
+            </p>
+
+            <code>
+                <pre>
+                    def perform_observation_loop(self, rot_vel=120):
+                        """Perform the observation loop behavior on the real robot, where the robot does  
+                        a 360 degree turn in place while collecting equidistant (in the angular space) sensor
+                        readings, with the first sensor reading taken at the robot's current heading. 
+                        The number of sensor readings depends on "observations_count"(=18) defined in world.yaml.
+                        
+                        Keyword arguments:
+                            rot_vel -- (Optional) Angular Velocity for loop (degrees/second)
+                                        Do not remove this parameter from the function definition, even if you don't use it.
+                        Returns:
+                            sensor_ranges   -- A column numpy array of the range values (meters)
+                            sensor_bearings -- A column numpy array of the bearings at which the sensor readings were taken (degrees)
+                                            The bearing values are not used in the Localization module, so you may return a empty numpy array
+                        """
+                        self.tof = []
+                        self.yaw = []
+                        self.times = []
+                        #send command to map
+                        ble.send_command(CMD.MAP, "")
+                
+                        #wait 10 secs
+                        asyncio.run(self.sleep_for_n_secs(10))
+                
+                        #transfer datas
+                        ble.start_notify(ble.uuid['RX_STRING'], self.map_handler)
+                        ble.send_command(CMD.SEND_MAP, "")
+                        asyncio.run(self.sleep_for_n_secs(3))
+                
+                        ble.stop_notify(ble.uuid['RX_STRING'],)
+                
+                        #Format range and bearings
+                        sensor_ranges = np.array(self.tof)[np.newaxis].T / 1000
+                        sensor_bearings = np.array(self.yaw)[np.newaxis].T
+                
+                        print(sensor_ranges)
+                        return sensor_ranges, sensor_bearings
+            
+                </pre>
+            </code>
+
+            <p>
+                I was able to reuse my MAP command from Lab 9 as it did almost exactly what was needed for collecting the data for localization. 
+                However, for the localization to work, I had to edit the MAP command to spin at 20 degree intervals and only complete one loop. 
+                Additionally, it had to be spinning counter-clockwise as that was the expectation for the data for the localization. I made two 
+                helper functions for this code as well. The first of these was the function "sleep_for_n_secs", which would cause the system to be 
+                sleeped for the inputted number of seconds. This was executed with <code>asyncio.run</code> to ensure that the sleep only blocks 
+                this function, and no other bluetooth communications. The function would send the map command and sleep for 10 seconds, waiting 
+                for the car to complete a full spin. Then it would start up the "map_handler", the second helper function, as a notification handler. 
+                It then uses the "SEND_MAP" command to trigger the car to send the sensor data, and sleeps for 3 seconds to allow this data to be 
+                transferred. The notification can then be stopped, and the sensor data is reformatted to be a column vector using <code>np.array(self.tof)[np.newaxis].T</code>. 
+                Importantly, it is also divided by 1000 as the expected values are in meters, but the sensor reads in millimeters. With this complete, the real world 
+                localization could be tested. 
+                Below is the updated map code and two additional functions:
+            </p>
+            
+
+            <pre>
+                Map Code
+                <code>
+                    if(mycar.map) {
+                        if(mycar.orient == 0) { //Not currently turning, should make wait for each turn to be done
+                          int counter = 0;
+                          Serial.print("MAP");
+                          delay(100);
+                    
+                          if(mycar.orient_target == 0) {
+                            mycar.firstmap ++;
+                          }
+                          if (mycar.firstmap == 2) { //one full circle, done mapping
+                            mycar.map = 0;
+                            Serial.println("Circle Done");
+                            return;
+                          }
+                    
+                          while (counter < 1) { //wait for 5 sensor readings
+                            if(mapping()) {//take sensor readings, make sure it is new tof data
+                              counter += 1; 
+                              Serial.println("Sensoring");
+                            }
+                          }
+                    
+                          Serial.print("Target :");
+                          Serial.println(mycar.orient_target);
+                          mycar.start_time = millis();
+                          mycar.orient_target -= 20; //Take readings every 20 degrees, 18 total, counterclockwise
+                          if(mycar.orient_target < -180) { //indicates its better to go around the other way
+                            mycar.orient_target += 360;
+                          }
+                          mycar.orient = 1; //start turning to new direction
+                        }
+                      }
+                </code>
+            </pre>
+
+            <pre>
+                Sleep Helper function
+                <code>
+                    async def sleep_for_n_secs(self,n):
+                        print(f"Sleeping for {n} seconds...")
+                        await asyncio.sleep(n)
+                        print("Done sleeping.")
+                </code>
+            </pre>
+
+            <pre>
+                Mapping Data Notification Handler
+                <code>
+                    def map_handler(self, uuid, bytearr):
+                        try:
+                            piddata = ble.bytearray_to_string(bytearr)
+                            arr = piddata.split("tof:")[1] #Split messages
+                            tof1, arr = arr.split("yaw:")
+                            yaw1, time1 = arr.split("time:")
+                            self.tof.append(int(float(tof1)))
+                            self.yaw.append(int(float(yaw1)))
+                            self.times.append(int(float(time1)))
+                            
+                        except Exception as e:
+                            print(e)
+                </code>
+            </pre>
+
+
+            <h3><Strong>Testing</Strong></h3>
+            <p>
+                I tested the localization in the same maze from Lab 9 - Mapping, using the same 5 points of (-3,-2), (0,3), (5,3), (5,-3), and (0,0).
+                For each one I ran the localization a few times to ensure the results were consistent. Each of the following points will be presented as 
+                a video of the localization run, a image of the end localization result, and a discussion for that point. Notably the graphs are in meters 
+                while the coordinates, like (-3,-2), are in feet, so they wont match exactly.
+            </p>
+
+
+            <h4><Strong>(-3,-2)</Strong></h4>
+            <h5><Strong>(-3,-2) Video</Strong></h5>
+            <div class="centered">
+                <video width="640" height="480" controls>
+                    <source src="/images/lab11/n3n2.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+            <h5><Strong>(-3,-2) Final position</Strong></h5>
+            <div class = "centered">
+                <img src="/images/lab11/n3n2.png" alt="n3n2 final loc" class="responsive-img">
+            </div>
+            <p>
+                Point (-3,-2) localized quite nicely, with the end localization point only ending up slightly to the left (-x axis) of the real 
+                world ground truth. However, given that this is on a grid system and the sensors are noisy, I think this result is very reasonable and usable.
+                I found that this pose was one of the most consistent in localizating correctly, with every run I did getting very close to the actual robot position. 
+                I suspect this is because this point is almost fully enclosed by walls with only one opening, so almost every sensor reading is detecting a wall, and 
+                very few max out the sensor distance. 
+                Due to the one small opening, it is then more consistent to figure out the actual orientation and position of the robot in this space
+            </p>
+
+            <h4><Strong>(0,3)</Strong></h4>
+            <h5><Strong>(0,3) Video</Strong></h5>
+            <div class="centered">
+                <video width="640" height="480" controls>
+                    <source src="/images/lab11/03.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+            <h5><Strong>(0,3) Final position</Strong></h5>
+            <div class = "centered">
+                <img src="/images/lab11/03.png" alt="03 final loc" class="responsive-img">
+            </div>
+            <p>
+                Point (0,3) was also good at localizing, ending up with a localization once again slightly to the left of the ground truth. 
+                This point was close to a corner and also had other landmarks in view, such as the square in the center and the bottom 
+                bit of wall that juts out. I believe that the combination of having this close corner, some further away objects, and some 
+                objects that are fully out of the TOF sensors range allows for the localization to perform better, as the sensor readings are more unique from 
+                other positions, meaning that only the correct location gets assigned a high belief in the prediction step.
+            </p>
+
+            <h4><Strong>(5,3)</Strong></h4>
+            <h5><Strong>(5,3) Video</Strong></h5>
+            <div class="centered">
+                <video width="640" height="480" controls>
+                    <source src="/images/lab11/53.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+            <h5><Strong>(5,3) Final position</Strong></h5>
+            <div class = "centered">
+                <img src="/images/lab11/53.png" alt="53 final loc" class="responsive-img">
+            </div>
+            <p>
+                Point (5,3) was similar to the last two, once again ending up being pretty accurate on the Y axis and slightly to the 
+                left on the X axis. I found that this point failed to localize correctly one time out of my runs, where it localized at (-3,-2). 
+                I was unable to replicate this in several future runs, but my suspicion is that since the sensor is likely close to maxing out in terms of 
+                distance to the left, it ended up getting sensor readings that make it seem like it is surrounded by walls. Since there aren't many other 
+                meaningful landmarks for the sensor to catch, it can end up with a higher belief of being near (-3,-2). However, this only occured once, so 
+                I figure that having the box directly below it and being able to see the passage to the right of the box allows it to localize correctly most of the time.
+            </p>
+
+            <h4><Strong>(5,-3)</Strong></h4>
+            <p>
+                (5,-3) performed the worst out of all of the points by far. Whenever I would put the robot directly on this point, it would 
+                always localize at (-3,-2), as shown in the below video:
+            </p>
+            <div class="centered">
+                <video width="640" height="480" controls>
+                    <source src="/images/lab11/5n3fail.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+            <p>
+                Once again, I suspect this is because of the sensor ending up maxing out to the left. When I looked at the returned sensor data, 
+                the readings from the -x axis were consistently smaller than reality, and ended up making it look like the robot was enclosed 
+                in a smaller box then reality. Additionally, the opening passage on the top right is in the same location as the opening in (-3,-2), 
+                so it doesn't help differentiate the two points. I suspect because of these reasons, the localization ended up always seeing (-3,-2) as 
+                more probable. To test this theory, I actually did a run slightly to the right of (5,-3), closer to 5.5 for the X. My idea with this 
+                was that the robot could then see the right side of the box, which may help it localize. Below shows a video of that run:
+            </p>
+            <h5><Strong>(5,-3) Video</Strong></h5>
+            <div class="centered">
+                <video width="640" height="480" controls>
+                    <source src="/images/lab11/5n3.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+            <h5><Strong>(5,-3) Final position</Strong></h5>
+            <div class = "centered">
+                <img src="/images/lab11/5n3.png" alt="5n3 final loc" class="responsive-img">
+            </div>
+            <p>
+                This actually succeeds in localizing correctly, adding credibility to my hypothesis. The localization ends up a bit to the right of reality, 
+                but is very close to the actual position. I do a few more runs to confirm this, getting consistent results when the robot is positioned such 
+                that it gets a sensor measurement of the left side of the box.
+            </p>
+
+            <h4><Strong>(0,0)</Strong></h4>
+            <h5><Strong>(0,0) Video</Strong></h5>
+            <div class="centered">
+                <video width="640" height="480" controls>
+                    <source src="/images/lab11/00.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+            <h5><Strong>(0,0) Final position</Strong></h5>
+            <div class = "centered">
+                <img src="/images/lab11/00.png" alt="00 final loc" class="responsive-img">
+            </div>
+            <p>
+                The origin (0,0) actually performed the best out of all my runs, localizing exactly on the point (0,0). While this is in part due to the 
+                grid system discritizing the possible locations, it was still impressive to me that the robot would consistently localize exactly there.
+                I suspect this is because the origin has some of the most unique sensor measurements, seeing both the box and the bottom wall that juts out, 
+                while also seeing into to the box on the lower left. Since it has so many unique features that it scans, no other location on the map can 
+                give those sensor outputs, making the localization very accurate.
+            </p>
+
+
+            <h4><Strong>Conclusion</Strong></h4>
+            <p>
+                Throughout these tests, I found that the robot was able to localize the best when it had objects that were near enough to 
+                be well within the sensor range while being at variable distances, as these serve as differentiating features between the 
+                robots actual location and other possible locations it could be at. Conversly, the robot struggled to localize when it lacked 
+                these features or when the distance between the robot and the walls got too far, as the sensor readings would become more and more inaccurate.
+                This is somewhat consistent with what I noticed in the simulated version for lab 10, where the robot did the best in more open spaces where 
+                it could see many objects. However, I didn't see the issues with points (5,3) and (5,-3) in the simulation, probably due to both the sensor 
+                not maxing out and being more accurate as well as the simulation having the prediction step with some knowledge of its last location. One potential 
+                thing I could have experimented more with was the sensor noise sigma variable, although I found that the localization worked pretty well without tweaking it.
+                One other note is that the localization tended to be slightly to the left of the ground truth in a lot of runs. This could indicate some systematic 
+                error, although I suspect it is more of a coincidence as I also saw runs that were too far to the right. If I was to try to improve the localization, 
+                I may swap to taking either more readings throughout the circle or multiple readings for each point, as taking only one reading at each 20 degrees means 
+                if one data point is off, the localization will be significantly worsened. It is also worth noting that a good number of the runs had some sort of interference 
+                in the form of either other robots being run in the localization area at the same time or people stepping through it. It would be interesting to see if the localization 
+                would actually see any improvement from these being absent or if it would perform the same.
+            </p>
+
+            <h4><Strong>References</Strong></h4>
+            <p>
+                I referred to Mikayla Lahr's website from last year for this project, and discussed with Jorge Corpa Chung about how to approach the lab.
+            </p>
+            
+    </div>
+
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/popper.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/main.js"></script>
+
+    <script>
+        fetch("sidebar.html")
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("sidebar-container").innerHTML = data;
+                document.getElementById("sidebarCollapse").addEventListener("click", function () {
+                    document.getElementById("sidebar").classList.toggle("active");
+                });
+            });
+    </script>
+</div>

@@ -24,3 +24,11 @@
 2025-04-21 22:27:51,641 | MainThread   | [INFO    ] | start               |: Creating New Plotter Process
 2025-04-21 22:38:36,660 | MainThread   | [INFO    ] | start               |: Creating New Simulator Process
 2025-04-21 22:38:37,308 | MainThread   | [INFO    ] | start               |: Creating New Plotter Process
+2025-04-29 14:24:05,565 | MainThread   | [ERROR   ] | on_click_sim_reset  |: Simulator is not running
+2025-04-29 14:24:06,378 | MainThread   | [INFO    ] | on_click_plotter_reset|: Resetting Plotter
+2025-04-29 14:24:21,247 | MainThread   | [INFO    ] | start               |: Creating New Simulator Process
+2025-04-29 14:24:21,865 | MainThread   | [INFO    ] | start               |: Creating New Plotter Process
+2025-04-29 15:46:32,177 | MainThread   | [INFO    ] | GET_GUI             |: GUI is already running. Shutdown notebook to force restart the GUI.
+2025-04-29 15:46:32,564 | MainThread   | [ERROR   ] | start               |: Plotter is already running
+2025-04-29 15:46:42,853 | MainThread   | [INFO    ] | GET_GUI             |: GUI is already running. Shutdown notebook to force restart the GUI.
+2025-04-29 15:46:43,327 | MainThread   | [INFO    ] | start               |: Creating New Plotter Process

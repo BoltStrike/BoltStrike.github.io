@@ -1,0 +1,206 @@
+2025-04-29 14:22:53,426 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:22:53,434 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.003 secs
+2025-04-29 14:23:04,758 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:23:04,807 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.041 secs
+2025-04-29 14:23:07,870 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:23:07,891 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.003 secs
+2025-04-29 14:23:09,952 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:23:09,977 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.023 secs
+2025-04-29 14:23:12,972 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:23:12,980 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.002 secs
+2025-04-29 14:23:14,035 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:23:14,065 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.029 secs
+2025-04-29 14:23:17,005 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:23:17,011 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.002 secs
+2025-04-29 14:23:18,067 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:23:18,094 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.025 secs
+2025-04-29 14:23:21,026 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:23:21,050 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.004 secs
+2025-04-29 14:23:24,121 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:23:24,215 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.081 secs
+2025-04-29 14:23:28,089 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:23:28,103 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.005 secs
+2025-04-29 14:23:34,169 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:23:34,226 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.048 secs
+2025-04-29 14:23:37,143 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:23:37,153 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.003 secs
+2025-04-29 14:23:39,229 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:23:39,276 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.046 secs
+2025-04-29 14:23:42,220 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:23:42,239 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.002 secs
+2025-04-29 14:23:44,294 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:23:44,325 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.029 secs
+2025-04-29 14:23:47,264 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:23:47,272 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.005 secs
+2025-04-29 14:23:50,324 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:23:50,349 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.020 secs
+2025-04-29 14:23:53,275 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:23:53,286 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.003 secs
+2025-04-29 14:23:56,354 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:23:56,407 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.048 secs
+2025-04-29 14:23:59,342 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:23:59,365 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.009 secs
+2025-04-29 14:24:01,449 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:24:01,485 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.035 secs
+2025-04-29 14:24:05,241 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:28:07,954 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:28:07,964 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.004 secs
+2025-04-29 14:28:16,094 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:28:16,148 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.050 secs
+2025-04-29 14:28:19,109 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:28:19,113 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.003 secs
+2025-04-29 14:28:21,211 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:28:21,237 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.023 secs
+2025-04-29 14:28:24,210 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:28:24,236 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.004 secs
+2025-04-29 14:28:25,315 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:28:25,346 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.029 secs
+2025-04-29 14:28:28,300 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:28:28,312 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.004 secs
+2025-04-29 14:28:29,389 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:28:29,414 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.024 secs
+2025-04-29 14:28:32,376 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:28:32,383 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.002 secs
+2025-04-29 14:28:35,442 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:28:35,499 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.040 secs
+2025-04-29 14:28:38,466 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:28:38,471 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.002 secs
+2025-04-29 14:28:44,529 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:28:44,555 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.021 secs
+2025-04-29 14:28:47,512 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:28:47,516 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.002 secs
+2025-04-29 14:28:49,563 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:28:49,599 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.019 secs
+2025-04-29 14:28:52,549 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:28:52,553 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.002 secs
+2025-04-29 14:28:54,599 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:28:54,619 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.019 secs
+2025-04-29 14:28:57,562 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:28:57,569 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.002 secs
+2025-04-29 14:29:00,635 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:29:00,655 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.019 secs
+2025-04-29 14:29:03,579 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:29:03,583 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.002 secs
+2025-04-29 14:29:06,646 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:29:06,681 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.035 secs
+2025-04-29 14:29:09,626 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:29:09,631 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.001 secs
+2025-04-29 14:29:11,673 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:29:11,700 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.026 secs
+2025-04-29 14:29:14,648 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:29:14,653 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.002 secs
+2025-04-29 14:29:17,704 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:29:17,723 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.018 secs
+2025-04-29 14:29:20,663 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:29:20,670 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.003 secs
+2025-04-29 14:29:22,724 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:29:22,766 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.040 secs
+2025-04-29 14:29:25,706 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:29:25,709 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.001 secs
+2025-04-29 14:29:27,763 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:29:27,818 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.050 secs
+2025-04-29 14:29:30,778 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:29:30,783 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.002 secs
+2025-04-29 14:29:33,851 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:29:33,870 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.018 secs
+2025-04-29 14:29:36,833 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:29:36,840 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.002 secs
+2025-04-29 14:29:39,913 | MainThread   | [INFO    ] | prediction_step     |: Prediction Step
+2025-04-29 14:29:39,952 | MainThread   | [INFO    ] | prediction_step     |:  | Prediction Time: 0.029 secs
+2025-04-29 14:29:42,934 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 14:29:42,940 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.002 secs
+2025-04-29 15:54:49,490 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 15:54:49,495 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.003 secs
+2025-04-29 15:54:49,496 | MainThread   | [INFO    ] | plot_update_step_data|: Bel index     : (np.int64(0), np.int64(0), np.int64(0)) with prob = nan
+2025-04-29 15:54:49,497 | MainThread   | [INFO    ] | plot_update_step_data|: Bel_bar prob at index = 0.00051440329218107
+2025-04-29 15:54:49,497 | MainThread   | [INFO    ] | plot_update_step_data|: Belief        : (-1.524, -1.219, -170.000)
+2025-04-29 15:55:37,670 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 15:55:37,674 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.001 secs
+2025-04-29 15:55:37,674 | MainThread   | [INFO    ] | plot_update_step_data|: Bel index     : (np.int64(0), np.int64(0), np.int64(0)) with prob = nan
+2025-04-29 15:55:37,675 | MainThread   | [INFO    ] | plot_update_step_data|: Bel_bar prob at index = 0.00051440329218107
+2025-04-29 15:55:37,676 | MainThread   | [INFO    ] | plot_update_step_data|: Belief        : (-1.524, -1.219, -170.000)
+2025-04-29 15:56:30,383 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 15:56:30,386 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.001 secs
+2025-04-29 15:56:30,387 | MainThread   | [INFO    ] | plot_update_step_data|: Bel index     : (np.int64(0), np.int64(0), np.int64(0)) with prob = nan
+2025-04-29 15:56:30,388 | MainThread   | [INFO    ] | plot_update_step_data|: Bel_bar prob at index = 0.00051440329218107
+2025-04-29 15:56:30,388 | MainThread   | [INFO    ] | plot_update_step_data|: Belief        : (-1.524, -1.219, -170.000)
+2025-04-29 15:57:21,889 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 15:57:21,892 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.001 secs
+2025-04-29 15:57:21,893 | MainThread   | [INFO    ] | plot_update_step_data|: Bel index     : (np.int64(0), np.int64(0), np.int64(0)) with prob = nan
+2025-04-29 15:57:21,893 | MainThread   | [INFO    ] | plot_update_step_data|: Bel_bar prob at index = 0.00051440329218107
+2025-04-29 15:57:21,894 | MainThread   | [INFO    ] | plot_update_step_data|: Belief        : (-1.524, -1.219, -170.000)
+2025-04-29 15:57:46,229 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 15:57:46,240 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.005 secs
+2025-04-29 15:57:46,241 | MainThread   | [INFO    ] | plot_update_step_data|: Bel index     : (np.int64(0), np.int64(0), np.int64(0)) with prob = nan
+2025-04-29 15:57:46,242 | MainThread   | [INFO    ] | plot_update_step_data|: Bel_bar prob at index = 0.00051440329218107
+2025-04-29 15:57:46,242 | MainThread   | [INFO    ] | plot_update_step_data|: Belief        : (-1.524, -1.219, -170.000)
+2025-04-29 15:58:26,604 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 15:58:26,608 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.001 secs
+2025-04-29 15:58:26,608 | MainThread   | [INFO    ] | plot_update_step_data|: Bel index     : (np.int64(0), np.int64(0), np.int64(0)) with prob = nan
+2025-04-29 15:58:26,609 | MainThread   | [INFO    ] | plot_update_step_data|: Bel_bar prob at index = 0.00051440329218107
+2025-04-29 15:58:26,609 | MainThread   | [INFO    ] | plot_update_step_data|: Belief        : (-1.524, -1.219, -170.000)
+2025-04-29 16:03:18,874 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 16:03:18,885 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.004 secs
+2025-04-29 16:03:18,887 | MainThread   | [INFO    ] | plot_update_step_data|: Bel index     : (np.int64(1), np.int64(2), np.int64(16)) with prob = 0.9999999
+2025-04-29 16:03:18,889 | MainThread   | [INFO    ] | plot_update_step_data|: Bel_bar prob at index = 0.00051440329218107
+2025-04-29 16:03:18,889 | MainThread   | [INFO    ] | plot_update_step_data|: Belief        : (-1.219, -0.610, 150.000)
+2025-04-29 16:04:14,639 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 16:04:14,644 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.001 secs
+2025-04-29 16:04:14,644 | MainThread   | [INFO    ] | plot_update_step_data|: Bel index     : (np.int64(2), np.int64(1), np.int64(10)) with prob = 1.0
+2025-04-29 16:04:14,645 | MainThread   | [INFO    ] | plot_update_step_data|: Bel_bar prob at index = 0.00051440329218107
+2025-04-29 16:04:14,646 | MainThread   | [INFO    ] | plot_update_step_data|: Belief        : (-0.914, -0.914, 30.000)
+2025-04-29 16:05:39,968 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 16:05:39,972 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.002 secs
+2025-04-29 16:05:39,973 | MainThread   | [INFO    ] | plot_update_step_data|: Bel index     : (np.int64(1), np.int64(2), np.int64(9)) with prob = 1.0
+2025-04-29 16:05:39,974 | MainThread   | [INFO    ] | plot_update_step_data|: Bel_bar prob at index = 0.00051440329218107
+2025-04-29 16:05:39,974 | MainThread   | [INFO    ] | plot_update_step_data|: Belief        : (-1.219, -0.610, 10.000)
+2025-04-29 16:07:47,616 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 16:07:47,623 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.001 secs
+2025-04-29 16:07:47,624 | MainThread   | [INFO    ] | plot_update_step_data|: Bel index     : (np.int64(4), np.int64(6), np.int64(9)) with prob = 0.9912460
+2025-04-29 16:07:47,625 | MainThread   | [INFO    ] | plot_update_step_data|: Bel_bar prob at index = 0.00051440329218107
+2025-04-29 16:07:47,626 | MainThread   | [INFO    ] | plot_update_step_data|: Belief        : (-0.305, 0.610, 10.000)
+2025-04-29 16:10:20,219 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 16:10:20,223 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.002 secs
+2025-04-29 16:10:20,223 | MainThread   | [INFO    ] | plot_update_step_data|: Bel index     : (np.int64(6), np.int64(8), np.int64(8)) with prob = 1.0
+2025-04-29 16:10:20,224 | MainThread   | [INFO    ] | plot_update_step_data|: Bel_bar prob at index = 0.00051440329218107
+2025-04-29 16:10:20,225 | MainThread   | [INFO    ] | plot_update_step_data|: Belief        : (0.305, 1.219, -10.000)
+2025-04-29 16:11:31,982 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 16:11:31,986 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.001 secs
+2025-04-29 16:11:31,986 | MainThread   | [INFO    ] | plot_update_step_data|: Bel index     : (np.int64(4), np.int64(7), np.int64(9)) with prob = 0.9999999
+2025-04-29 16:11:31,987 | MainThread   | [INFO    ] | plot_update_step_data|: Bel_bar prob at index = 0.00051440329218107
+2025-04-29 16:11:31,987 | MainThread   | [INFO    ] | plot_update_step_data|: Belief        : (-0.305, 0.914, 10.000)
+2025-04-29 16:13:02,789 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 16:13:02,792 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.001 secs
+2025-04-29 16:13:02,793 | MainThread   | [INFO    ] | plot_update_step_data|: Bel index     : (np.int64(2), np.int64(1), np.int64(3)) with prob = 0.9383275
+2025-04-29 16:13:02,793 | MainThread   | [INFO    ] | plot_update_step_data|: Bel_bar prob at index = 0.00051440329218107
+2025-04-29 16:13:02,793 | MainThread   | [INFO    ] | plot_update_step_data|: Belief        : (-0.914, -0.914, -110.000)
+2025-04-29 16:14:08,251 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 16:14:08,254 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.001 secs
+2025-04-29 16:14:08,255 | MainThread   | [INFO    ] | plot_update_step_data|: Bel index     : (np.int64(9), np.int64(7), np.int64(10)) with prob = 0.9999999
+2025-04-29 16:14:08,255 | MainThread   | [INFO    ] | plot_update_step_data|: Bel_bar prob at index = 0.00051440329218107
+2025-04-29 16:14:08,256 | MainThread   | [INFO    ] | plot_update_step_data|: Belief        : (1.219, 0.914, 30.000)
+2025-04-29 16:16:41,493 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 16:16:41,497 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.001 secs
+2025-04-29 16:16:41,497 | MainThread   | [INFO    ] | plot_update_step_data|: Bel index     : (np.int64(1), np.int64(3), np.int64(1)) with prob = 0.9835769
+2025-04-29 16:16:41,498 | MainThread   | [INFO    ] | plot_update_step_data|: Bel_bar prob at index = 0.00051440329218107
+2025-04-29 16:16:41,498 | MainThread   | [INFO    ] | plot_update_step_data|: Belief        : (-1.219, -0.305, -150.000)
+2025-04-29 16:17:29,012 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 16:17:29,016 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.001 secs
+2025-04-29 16:17:29,017 | MainThread   | [INFO    ] | plot_update_step_data|: Bel index     : (np.int64(0), np.int64(3), np.int64(1)) with prob = 0.9998483
+2025-04-29 16:17:29,017 | MainThread   | [INFO    ] | plot_update_step_data|: Bel_bar prob at index = 0.00051440329218107
+2025-04-29 16:17:29,018 | MainThread   | [INFO    ] | plot_update_step_data|: Belief        : (-1.524, -0.305, -150.000)
+2025-04-29 16:18:40,022 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 16:18:40,025 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.001 secs
+2025-04-29 16:18:40,026 | MainThread   | [INFO    ] | plot_update_step_data|: Bel index     : (np.int64(2), np.int64(4), np.int64(0)) with prob = 1.0
+2025-04-29 16:18:40,027 | MainThread   | [INFO    ] | plot_update_step_data|: Bel_bar prob at index = 0.00051440329218107
+2025-04-29 16:18:40,028 | MainThread   | [INFO    ] | plot_update_step_data|: Belief        : (-0.914, 0.000, -170.000)
+2025-04-29 16:20:02,772 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 16:20:02,776 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.001 secs
+2025-04-29 16:20:02,777 | MainThread   | [INFO    ] | plot_update_step_data|: Bel index     : (np.int64(11), np.int64(1), np.int64(9)) with prob = 1.0
+2025-04-29 16:20:02,777 | MainThread   | [INFO    ] | plot_update_step_data|: Bel_bar prob at index = 0.00051440329218107
+2025-04-29 16:20:02,778 | MainThread   | [INFO    ] | plot_update_step_data|: Belief        : (1.829, -0.914, 10.000)
+2025-04-29 16:22:43,384 | MainThread   | [INFO    ] | update_step         |: Update Step
+2025-04-29 16:22:43,387 | MainThread   | [INFO    ] | update_step         |:      | Update Time: 0.001 secs
+2025-04-29 16:22:43,387 | MainThread   | [INFO    ] | plot_update_step_data|: Bel index     : (np.int64(5), np.int64(4), np.int64(9)) with prob = 1.0
+2025-04-29 16:22:43,388 | MainThread   | [INFO    ] | plot_update_step_data|: Bel_bar prob at index = 0.00051440329218107
+2025-04-29 16:22:43,388 | MainThread   | [INFO    ] | plot_update_step_data|: Belief        : (0.000, 0.000, 10.000)

@@ -1031,27 +1031,29 @@ void loop()
       int counter = 0;
       Serial.print("MAP");
       delay(100);
+
+      if(mycar.orient_target == 0) {
+        mycar.firstmap ++;
+      }
+      if (mycar.firstmap == 2) { //two full circle, done mapping
+        mycar.map = 0;
+        Serial.println("Circle Done");
+        return;
+      }
+
       while (counter < 1) { //wait for 5 sensor readings
         if(mapping()) {//take sensor readings, make sure it is new tof data
           counter += 1; 
           Serial.println("Sensoring");
         }
       }
-      if(mycar.orient_target == 0) {
-        mycar.firstmap ++;
-      }
-      if (mycar.firstmap == 3) { //two full circle, done mapping
-        mycar.map = 0;
-        Serial.println("Circle Done");
-        return;
-      }
 
       Serial.print("Target :");
       Serial.println(mycar.orient_target);
       mycar.start_time = millis();
-      mycar.orient_target += 10; //Take readings every 20 degrees, 18 total
-      if(mycar.orient_target > 180) { //indicates its better to go around the other way
-        mycar.orient_target -= 360;
+      mycar.orient_target -= 20; //Take readings every 20 degrees, 18 total
+      if(mycar.orient_target < -180) { //indicates its better to go around the other way
+        mycar.orient_target += 360;
       }
       mycar.orient = 1; //start turning to new direction
     }
