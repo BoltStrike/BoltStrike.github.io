@@ -1,0 +1,385 @@
+
+<!-- Page Content  -->
+<link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="../css/style.css">
+
+<div class="wrapper d-flex align-items-stretch">
+    <div id="sidebar-container"></div>
+    <div class="stacked">
+        <div id="content" class="p-4 p-md-5 pt-5">
+            <h1 class="mb-4"><strong>Lab 12 - Path Planning and Execution </strong></h1>
+            <p>
+                The goal of Lab 12 was to have to robotic car plan a path through waypoints in the arena that was used in previous labs for mapping and localization.
+                To accomplish this, we could decide to use open loop or closed loop control.
+            </p>
+            <h3><Strong>Lab:</Strong></h3>
+            <h4><Strong>Initial approach</Strong></h4>
+            <p>
+                The path that the car was to navigate consisted of navigating 9 different waypoints, starting in the lower left corner of the 
+                map and circling around the map, eventually ending in at the origin. Below is an image of this desired path:
+            </p>
+
+            <div class = "centered">
+                <img src="/images/lab12/Maze.png" alt="Desired Path" class="responsive-img">
+            </div> 
+
+            <p>
+                My initial approach towards this problem was to use the code from Lab 11 to have the robot navigate accurately between waypoints. My idea was 
+                to use the Python notebook as a control system, calculating the angle the robot had to be at and how far forward it had to move at each timestep.
+                This was accomplished by first taking the difference in the X position and Y position of the next way point versus the current position. 
+                This could then be used to calculate the angle that the robot needed to turn using trigonometry, and how far it needed to go, using Pythagoreums 
+                theorem. The angle would then be sent to the robot via orientation control, and a small delay was run to give the robot time to reach this orientation. 
+                Then, the robot would recieve a command to drive the set distance. Finally, the localization from Lab11 would occur, with the robot spinning in a circle 
+                to gather sensor measurements and localize its new position. This would allow the robot to ideally adjust to any mistakes it made in the last time step, 
+                and recalculate an accurate new distance and angle to get to the next position. The code for this is shown below. 
+            </p>
+
+            <code>
+                <pre>
+                    # Init Uniform Belief
+                    loc.init_grid_beliefs()
+
+                    cur_point = [-4*0.3048,-3*0.3048]
+
+                    waypoints = [[-2, -1], [1, -1], [2, -3], [5, -3], [5, -2], [5, 3], [0, 3], [0, 0]]
+
+                    ble.send_command(CMD.SET_KPID, "0.3| 0.003|0.016")
+                    ble.send_command(CMD.SET_OPID, "0.3|0.1|0.05")
+
+                    for i in range(len(waypoints)):
+
+                        # Get Observation Data by executing a 360 degree rotation motion
+                        diff_x = waypoints[i][0]*0.3048 - cur_point[0]
+                        diff_y = waypoints[i][1]*0.3048 - cur_point[1]
+
+                        heading_rad = math.atan2(diff_y, diff_x)  # Radians
+                        heading_deg = -math.degrees(heading_rad)   # Degrees
+
+                        dist = math.sqrt(math.pow(diff_x, 2) + math.pow(diff_y, 2)) * 1000 #Distance
+
+                        print(heading_deg) 
+                        print(dist)
+                        ble.send_command(CMD.SET_TARGET, f"304|{heading_deg}")
+                        ble.send_command(CMD.ORIENT, "")
+
+                        asyncio.run(robot.sleep_for_n_secs(2))
+                        ble.send_command(CMD.DRIVE_DIST, f"{dist}")
+                        asyncio.run(robot.sleep_for_n_secs(2))
+                        
+                        loc.get_observation_data()
+
+                        loc.update_step()
+
+                        argmax_bel = get_max(loc.bel)
+                        current_belief = loc.mapper.from_map(*argmax_bel[0])
+
+                        cur_point[0] = current_belief[0]
+                        cur_point[1] = current_belief[1]
+                        print(cur_point)
+                        print("-----")
+                        
+                        # Run Update Step
+
+                        loc.plot_update_step_data(plot_data=True)
+
+                </pre>
+            </code>
+
+            <p>
+                This approach involved scaling the waypoints carefully, as the waypoints were given to us in terms of feet. However, the localization 
+                was performed in meters and the car expected millimeters for its drive distance, hence the conversion of 0.3048 meters/ft and 1000 millimeters/meter. 
+                For this method to function, a new case for bluetooth would need to be implemented, being the DRIVE_DIST command. Before this lab, the car had 
+                no way to drive a set distance, which was necessary for this implementation to work. My initial approach to this was to use the TOF measurements.
+                By taking TOF measurements before moving, and then subtracting the distance that was desired to move, a distance setpoint could be calculated for the PID
+                control of the car. Below is the code for this new DRIVE_DIST case:
+            </p>
+
+            <code>
+                <pre>
+                    if(mycar.drivedist) {
+                        
+                        while (counter < 10) { //wait for 5 sensor readings
+                          if(mapping()) {//take sensor readings, make sure it is new tof data
+                            counter += 1; 
+                            Serial.println("Sensoring");
+                          }
+                        }
+                        int sum = 0;
+                        for (int i = 1; i < 11; i ++) {
+                          sum += tof[iter-i][0];
+                          Serial.println(tof[iter-i][0]);
+                        }
+                        mycar.dist_target = (int)(sum/10) - mycar.waypointdist;
+                        mycar.driving = 1;
+                        mycar.drivedist = 0;
+                      }
+                    </pre>
+                </code>
+
+            <p>
+                The mapping command from Lab 9 was used to take 10 sensor measurements, which were then averaged to get the distance to the wall that the car 
+                was currently facing. A passed in distance to waypoint was then used to set the car's dist_target, and then the car was set to drive forward 
+                with PID control using the <code>mycar.driving</code> flag.
+            </p>
+
+            <p>
+                This initial implementation unfortunately ran into an immediate problem with the first waypoint. While the car calculated the first 
+                angle it had to turn correctly at -45 degrees and correctly calculated the distance to the next way point, when the car went to drive 
+                to the waypoint, it drove way past it, only stopping when it got way closer to the far wall. After some heavy debugging, I discovered 
+                that this was tied to the TOF readings. As I observed in Lab 11, for whatever reason my TOF sensor could not seem to read distances past 
+                2000 millimeters at most. Whenever there was a farther distance, it would just return 2000 millimeters. This isn't expected behavior, as 
+                the TOF sensor was set to long range mode, which meant it should have an effective range of 4000 millimeters. While I observed it as 
+                capable of this in earlier labs, I could not reproduce it reading these longer distances now using the basic sensor reading code. This implies 
+                to me that the sensor may have been damaged at some point throughout the class, leading to it no longer reading long ranges accurately. Regardless, 
+                the end result of this was that the sensor would read 2000 millimeters, and since the desired distance to travel was around 800 millimeters, 
+                it would set an endpoint of around 1200 millimeters. However, as the car moved forward, the TOF would continue to read 2000 millimeters up until 
+                the car was within 2 meters of the walls, at which point it would start being accurate again. Thus, the car stopped at around 1200 meters from the far wall, 
+                far past the waypoint.
+            </p>
+
+            <h4><Strong>Using time to control distance</Strong></h4>
+            <p>
+                With the TOF sensors proving unreliable for this task, I pivoted to attempting to use a different method to determine how far 
+                the car drived forward: time. My thought was that I could calibrate the time that it took the car to drive a certain distance (3 feet),
+                and then use that to scale a delay for the car driving forward based off of the passed in distance. I accomplished this by running the 
+                car with a variety of different delays to see what delay got it to 3 feet, and found that about 100 milliseconds did this. Thus, I 
+                could multiply 100ms/914mm times the desired distance to get the delay needed to drive that distance. This updated code is shown below.
+            </p>
+            
+            <code>
+                <pre>
+                    if(mycar.drivedist) {
+                        //Calibrate drive distance to time
+                        int deltime = (int)(100.0/914.0 * (float)mycar.waypointdist);
+                        drivefb((int)110);
+                        delay(deltime);
+                        stopmotor();
+                        mycar.drivedist=0;
+                    }
+                </pre>
+            </code>
+
+            <p>
+                Unfortunately, this code also had a problem. The relation between the time of this delay and how far the car drove was not linear. The car 
+                always would take some time to accelerate up to speed, which meant that trying to use a direct scaling like this would never work. I was 
+                aware of this before trying this approach but had hoped the acceleration would be relatively negligible for this application, but found that 
+                using this method made the distance wildly off. I considered using a different sort of function to try to model the relationship between distance 
+                and delay time, but ultimately decided that it was going to be too hard to tune to be accurate.
+            </p>
+
+            <p>
+                Thus, my next step was to try to manually calculate each of these times. I did this by having the car drive between each waypoint, and tuning the 
+                distance such that it would just reach the waypoint. I then altered the DRIVE_DIST code to directly pass in a time to delay value, which looked as follows:
+            </p>
+
+            <code>
+                <pre>
+                    if(mycar.drivedist) {
+                        drivefb((int)110);
+                        delay(mycar.waypointdist);
+                        stopmotor();
+                        mycar.drivedist=0;
+                    }
+                </pre>
+            </code>
+
+            <p>
+                The python code driving the car was also changed to accomplish this:
+            </p>
+
+            <code>
+                <pre>
+                    times = [520, 545, 490, 580, 365, 760, 740, 515]
+
+                    ble.send_command(CMD.SET_KPID, "0.3| 0.003|0.016")
+                    ble.send_command(CMD.SET_OPID, "0.3|0.1|0.05")
+
+                    for i in range(len(waypoints)):
+
+                        # Get Observation Data by executing a 360 degree rotation motion
+                        diff_x = waypoints[i][0]*0.3048 - cur_point[0]
+                        diff_y = waypoints[i][1]*0.3048 - cur_point[1]
+
+
+                        heading_rad = math.atan2(diff_y, diff_x)  # Radians
+                        heading_deg = -math.degrees(heading_rad)+5   # Degrees, if you prefer
+
+                        dist = math.sqrt(math.pow(diff_x, 2) + math.pow(diff_y, 2)) * 1000
+
+                        print(heading_deg) 
+                        print(dist)
+                        ble.send_command(CMD.SET_TARGET, f"304|{heading_deg}")
+                        ble.send_command(CMD.ORIENT, "")
+
+                        asyncio.run(robot.sleep_for_n_secs(2))
+                        ble.send_command(CMD.DRIVE_DIST, f"{times[i]}")
+                        asyncio.run(robot.sleep_for_n_secs(2))
+                        
+                        loc.get_observation_data()
+
+                        loc.update_step()
+
+                        argmax_bel = get_max(loc.bel)
+                        current_belief = loc.mapper.from_map(*argmax_bel[0])
+
+                        cur_point[0] = current_belief[0]
+                        cur_point[1] = current_belief[1]
+                        print(cur_point)
+                        print("-----")
+                        
+                        # Run Update Step
+
+                        loc.plot_update_step_data(plot_data=True)
+                </pre>
+            </code>
+
+            <p>
+                This worked better, with the car starting to be able to navigate between some of the waypoints. The video below shows the best trial 
+                with this method:
+            </p>
+            <div class="centered">
+                <video width="640" height="480" controls>
+                    <source src="/images/lab12/localizepath.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+
+            <p>
+                As seen in the video, the car is able to hit the first 3 waypoints decently, but then gets an incorrect angle and fails to make it to 
+                the next waypoint. By looking at the localization map produced by this, it becomes clear why.
+            </p>
+
+            <div class = "centered">
+                <img src="/images/lab12/Waypoints.png" alt="Desired Path" class="responsive-img">
+            </div> 
+
+            <p>
+                The first couple waypoints that are acheived look reasonable. While not being exactly where the real desired waypoints are, the localization 
+                was close enough to get a good angle for the approach to the next waypoint. However, once the car got to the bottom right corner, it can 
+                be seen that the localization was incredibly off, placing the car in the top left corner. This made the angle and distance calculated extremely incorrect,
+                resulting in the car failing to reach the next waypoint and crashing.
+            </p>
+
+            <h4><Strong>Open Loop</Strong></h4>
+
+            <p>
+                This experiment revealed that in its current iteration, the localization was too inconsistent to be used reliably. I tried some basic steps to 
+                increase the precision of the localization, but without having a prediction step, it was just too hard to get consistently accurate localization data.
+                Thus, I swapped to trying to accomplish the task with fully open loop control. Instead of using the localization to determine the angle the car had to 
+                travel, I would just calculate the angles between each of the waypoints and use these. I initially avoided this approach as it inherently has no error 
+                correction capabilities, meaning if the car overshot a waypoint or turned slightly incorrectly, it had no way to recover. However, with the localization 
+                having issues, I decided to give this approach a shot. The code was altered in python to acheive this, seen below.
+            </p>
+
+            <code>
+                <pre>
+                    times = [520, 545, 490, 580, 365, 760, 740, 515]
+
+                    ble.send_command(CMD.SET_KPID, "0.3| 0.003|0.016")
+                    ble.send_command(CMD.SET_OPID, "0.3|0.1|0.05")
+
+                    for i in range(len(waypoints)):
+
+                        # Get Observation Data by executing a 360 degree rotation motion
+                        if(i == 0):
+                            diff_x = waypoints[i][0]*0.3048 - cur_point[0]
+                            diff_y = waypoints[i][1]*0.3048 - cur_point[1]
+                        else:
+                            diff_x = waypoints[i][0]*0.3048 - waypoints[i-1][0]*0.3048
+                            diff_y = waypoints[i][1]*0.3048 - waypoints[i-1][1]*0.3048
+
+                        heading_rad = math.atan2(diff_y, diff_x)  # Radians
+                        heading_deg = -math.degrees(heading_rad)+5   # Degrees, if you prefer
+
+                        dist = math.sqrt(math.pow(diff_x, 2) + math.pow(diff_y, 2)) * 1000
+
+                        print(heading_deg) 
+                        print(dist)
+                        ble.send_command(CMD.SET_TARGET, f"304|{heading_deg}")
+                        ble.send_command(CMD.ORIENT, "")
+
+                        asyncio.run(robot.sleep_for_n_secs(2))
+                        ble.send_command(CMD.DRIVE_DIST, f"{times[i]}")
+                        asyncio.run(robot.sleep_for_n_secs(2))
+                </pre>
+            </code>
+
+            <p>
+                I ran this open loop code for many trials, slightly tuning the angles and distances, trying to get one full successful run through. However, 
+                after hours of this, the following was my best attempt:
+            </p>
+
+            <div class="centered">
+                <video width="640" height="480" controls>
+                    <source src="/images/lab12/openpath.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+
+            <p>
+                The core issue was exactly what I was concerned about, where slight errors in angles and distances would build up over time. Firstly, 
+                I found that the DMP I was using for angle calculations would occasionally end up 5-10 degrees off in its reading. While this isn't a lot 
+                and didnt negatively impact other labs, it was enough to prevent the car from reaching the next waypoint. This can be seen in the above video, 
+                where even though each of the angles is correctly calculated and sent, as shown by the car accurately reaching the first several waypoints, it ends 
+                up being off on the bottom right calculation, requiring me to come in and correct it so it could continue the path. This may not necessarily be a 
+                hardware issue as I tested with a friends IMU as well and had the same issue, but if it was a coding issue, I was unable to trace the bug or solve it. 
+                Additionally, the open loop control for distance also had problems, due to it depending on the battery's charge. As the battery got discharged over time, 
+                the car would travel less far in the same time. This made it incredibly hard to run repeated trials with this code, as the hardcoded times would have to 
+                be constantly changing to keep the car getting to the waypoints.
+            </p>
+
+            <p>
+                In order to account for these issues, I ultimately caved and decided to do a run where I manually set the angle and distance at each time step. This 
+                was incredibly slow as I had to manually determine each of the values for the angle and the distance. It is sped up 4 times.
+            </p>
+
+            <div class="centered">
+                <video width="640" height="480" controls>
+                    <source src="/images/lab12/mypath.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video> 
+            </div>
+
+            <p>
+                In doing this run, I further was able to tell the inconsistency with the DMP, as over the run I had to keep adjusting the angle by several degrees, 
+                even if the car was heading in the exact same direction as one of the earlier runs. I determined this was a DMP related error as the reported 
+                angular error was always close to 0.
+            </p>
+
+            <p>
+                In conclusion, I was unable to get one clean run of the path without me interfering at all. With more time, I likely could eventually get a clean 
+                open loop run or potentially debug some of the issues that had plagued me throughout the lab, but I had already put a very significant amount of time 
+                into the lab and ran up to the deadline. So instead, I decided to put the car into timeout for not behaving and getting a good run.
+            </p>
+
+            <div class = "centered">
+                <img src="/images/lab12/timeout.png" alt="Desired Path" class="responsive-img">
+            </div> 
+            
+
+            <h4><Strong>References</Strong></h4>
+            <p>
+                Huge thanks to Henry Calderon, Jorge Corpa Chung, Jennie Redrovan, Sana Chawla, and Lulu Htutt for this lab. I worked together 
+                on this lab with them to ideate approaches, troubleshoot code, and for general moral support throughout.
+            </p>
+            
+    </div>
+
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/popper.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/main.js"></script>
+
+    <script>
+        fetch("sidebar.html")
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("sidebar-container").innerHTML = data;
+                document.getElementById("sidebarCollapse").addEventListener("click", function () {
+                    document.getElementById("sidebar").classList.toggle("active");
+                });
+            });
+    </script>
+</div>
